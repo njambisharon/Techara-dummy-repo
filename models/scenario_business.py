@@ -5,7 +5,7 @@ from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from models.base import Base
 from models.enums import Decision, varchar_enum
 
 

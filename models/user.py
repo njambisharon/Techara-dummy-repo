@@ -5,8 +5,8 @@ from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, String, f
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.roles import UserRole
-from database import Base
+from models.enums import UserRole
+from models.base import Base
 from models.enums import varchar_enum
 
 

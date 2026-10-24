@@ -3,6 +3,11 @@ from enum import Enum
 from sqlalchemy import Enum as SAEnum
 
 
+class UserRole(str, Enum):
+    OPERATOR = "operator"
+    FIELD_AGENT = "field_agent"
+
+
 class BusinessType(str, Enum):
     MAIZE_MILL = "maize_mill"
     WELDING = "welding"

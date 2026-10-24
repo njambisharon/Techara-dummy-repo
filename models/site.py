@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, func, tex
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from models.base import Base
 
 
 class Site(Base):

@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, String, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from models.base import Base
 
 
 class Organisation(Base):
