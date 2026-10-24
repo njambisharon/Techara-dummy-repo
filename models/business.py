@@ -1,8 +1,18 @@
+from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,16 +20,28 @@ from models.base import Base
 from models.enums import BusinessType, ConnectionStatus, StartupDataLabel, varchar_enum
 
 
+if TYPE_CHECKING:
+    from models.meter_assignment import MeterAssignment
+    from models.scenario_business import ScenarioBusiness
+    from models.site import Site
+
+
 class Business(Base):
     __tablename__ = "business"
     __table_args__ = (
-        CheckConstraint("days_per_month BETWEEN 1 AND 31", name="ck_business_days_per_month"),
+        CheckConstraint(
+            "days_per_month BETWEEN 1 AND 31", name="ck_business_days_per_month"
+        ),
         CheckConstraint("startup_power_kw > 0", name="ck_business_startup_power"),
         CheckConstraint("startup_duration_s > 0", name="ck_business_startup_duration"),
         CheckConstraint(
-            "(startup_power_kw IS NULL) = (startup_data_label IS NULL)", name="ck_business_startup_label_pair"
+            "(startup_power_kw IS NULL) = (startup_data_label IS NULL)",
+            name="ck_business_startup_label_pair",
         ),
-        CheckConstraint("jsonb_typeof(operating_hours) = 'object'", name="ck_business_operating_hours_shape"),
+        CheckConstraint(
+            "jsonb_typeof(operating_hours) = 'object'",
+            name="ck_business_operating_hours_shape",
+        ),
     )
 
     business_id: Mapped[uuid.UUID] = mapped_column(
@@ -28,7 +50,9 @@ class Business(Base):
     site_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("site.site_id"), nullable=False, index=True
     )
-    logged_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
+    logged_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+    )
     business_name: Mapped[str] = mapped_column(String(100), nullable=False)
     business_type: Mapped[BusinessType] = mapped_column(
         varchar_enum(BusinessType, 30, "ck_business_type"), nullable=False
@@ -48,8 +72,14 @@ class Business(Base):
     startup_data_label: Mapped[StartupDataLabel | None] = mapped_column(
         varchar_enum(StartupDataLabel, 15, "ck_business_startup_data_label")
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
     site: Mapped["Site"] = relationship(back_populates="businesses")
-    assignments: Mapped[list["MeterAssignment"]] = relationship(back_populates="business")
-    scenario_links: Mapped[list["ScenarioBusiness"]] = relationship(back_populates="business")
+    assignments: Mapped[list["MeterAssignment"]] = relationship(
+        back_populates="business"
+    )
+    scenario_links: Mapped[list["ScenarioBusiness"]] = relationship(
+        back_populates="business"
+    )

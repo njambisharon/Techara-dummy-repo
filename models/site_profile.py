@@ -1,12 +1,27 @@
+from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, UniqueConstraint, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+
+
+if TYPE_CHECKING:
+    from models.scenario import Scenario
+    from models.site import Site
 
 
 class SiteProfile(Base):
@@ -14,16 +29,33 @@ class SiteProfile(Base):
     __table_args__ = (
         UniqueConstraint("site_id", "version", name="uq_site_profile_site_version"),
         CheckConstraint("version >= 1", name="ck_site_profile_version"),
-        CheckConstraint("inverter_continuous_kw > 0", name="ck_site_profile_inverter_continuous"),
-        CheckConstraint("inverter_surge_kw > 0", name="ck_site_profile_inverter_surge"),
-        CheckConstraint("inverter_surge_duration_s > 0", name="ck_site_profile_inverter_surge_duration"),
-        CheckConstraint("battery_nominal_kwh > 0", name="ck_site_profile_battery_nominal"),
-        CheckConstraint("soc_min_percent BETWEEN 0 AND 100", name="ck_site_profile_soc_min_range"),
-        CheckConstraint("soc_max_percent BETWEEN 0 AND 100", name="ck_site_profile_soc_max_range"),
-        CheckConstraint("soc_min_percent < soc_max_percent", name="ck_site_profile_soc_order"),
-        CheckConstraint("charge_efficiency > 0 AND charge_efficiency <= 1", name="ck_site_profile_charge_efficiency"),
         CheckConstraint(
-            "discharge_efficiency > 0 AND discharge_efficiency <= 1", name="ck_site_profile_discharge_efficiency"
+            "inverter_continuous_kw > 0", name="ck_site_profile_inverter_continuous"
+        ),
+        CheckConstraint("inverter_surge_kw > 0", name="ck_site_profile_inverter_surge"),
+        CheckConstraint(
+            "inverter_surge_duration_s > 0",
+            name="ck_site_profile_inverter_surge_duration",
+        ),
+        CheckConstraint(
+            "battery_nominal_kwh > 0", name="ck_site_profile_battery_nominal"
+        ),
+        CheckConstraint(
+            "soc_min_percent BETWEEN 0 AND 100", name="ck_site_profile_soc_min_range"
+        ),
+        CheckConstraint(
+            "soc_max_percent BETWEEN 0 AND 100", name="ck_site_profile_soc_max_range"
+        ),
+        CheckConstraint(
+            "soc_min_percent < soc_max_percent", name="ck_site_profile_soc_order"
+        ),
+        CheckConstraint(
+            "charge_efficiency > 0 AND charge_efficiency <= 1",
+            name="ck_site_profile_charge_efficiency",
+        ),
+        CheckConstraint(
+            "discharge_efficiency > 0 AND discharge_efficiency <= 1",
+            name="ck_site_profile_discharge_efficiency",
         ),
         CheckConstraint("max_charge_kw > 0", name="ck_site_profile_max_charge"),
         CheckConstraint("max_discharge_kw > 0", name="ck_site_profile_max_discharge"),
@@ -39,9 +71,12 @@ class SiteProfile(Base):
             "AND jsonb_array_length(solar_profile -> 'low_sun_kw') = 24",
             name="ck_site_profile_solar_shape",
         ),
-        CheckConstraint("settings ? 'min_observed_days'", name="ck_site_profile_settings_shape"),
         CheckConstraint(
-            "data_labels ?& array['baseline', 'solar', 'battery']", name="ck_site_profile_data_labels_shape"
+            "settings ? 'min_observed_days'", name="ck_site_profile_settings_shape"
+        ),
+        CheckConstraint(
+            "data_labels ?& array['baseline', 'solar', 'battery']",
+            name="ck_site_profile_data_labels_shape",
         ),
     )
 
@@ -67,8 +102,12 @@ class SiteProfile(Base):
     solar_profile: Mapped[dict] = mapped_column(JSONB, nullable=False)
     settings: Mapped[dict] = mapped_column(JSONB, nullable=False)
     data_labels: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
     site: Mapped["Site"] = relationship(back_populates="profiles")
     scenarios: Mapped[list["Scenario"]] = relationship(back_populates="profile")

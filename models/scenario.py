@@ -1,13 +1,35 @@
+from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
-from models.enums import DataLabel, LimitingCheck, Outcome, RevenueBasis, SolarDayType, varchar_enum
+from models.enums import (
+    DataLabel,
+    LimitingCheck,
+    Outcome,
+    RevenueBasis,
+    SolarDayType,
+    varchar_enum,
+)
+
+
+if TYPE_CHECKING:
+    from models.scenario_business import ScenarioBusiness
+    from models.site_profile import SiteProfile
 
 
 class Scenario(Base):
@@ -25,7 +47,10 @@ class Scenario(Base):
         UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     profile_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("site_profile.profile_id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("site_profile.profile_id"),
+        nullable=False,
+        index=True,
     )
     name: Mapped[str | None] = mapped_column(String(100))
     initial_stored_kwh: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
@@ -35,7 +60,9 @@ class Scenario(Base):
         server_default=SolarDayType.LOW_SUN.value,
     )
     period_days: Mapped[int] = mapped_column(Integer, nullable=False)
-    outcome: Mapped[Outcome] = mapped_column(varchar_enum(Outcome, 25, "ck_scenario_outcome"), nullable=False)
+    outcome: Mapped[Outcome] = mapped_column(
+        varchar_enum(Outcome, 25, "ck_scenario_outcome"), nullable=False
+    )
     check_results: Mapped[dict] = mapped_column(JSONB, nullable=False)
     limiting_check: Mapped[LimitingCheck | None] = mapped_column(
         varchar_enum(LimitingCheck, 10, "ck_scenario_limiting_check")
@@ -51,8 +78,12 @@ class Scenario(Base):
     metrics: Mapped[dict] = mapped_column(JSONB, nullable=False)
     simulation_trace: Mapped[dict] = mapped_column(JSONB, nullable=False)
     input_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
     profile: Mapped["SiteProfile"] = relationship(back_populates="scenarios")
     business_links: Mapped[list["ScenarioBusiness"]] = relationship(

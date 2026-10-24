@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -20,6 +21,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.base import Base
 
 
+if TYPE_CHECKING:
+    from models.meter_assignment import MeterAssignment
+
+
 class Reading(Base):
     __tablename__ = "reading"
     __table_args__ = (
@@ -28,7 +33,9 @@ class Reading(Base):
             ["meter_assignment.assignment_id", "meter_assignment.business_id"],
             name="fk_reading_assignment_business",
         ),
-        UniqueConstraint("assignment_id", "measured_at", name="uq_reading_assignment_measured_at"),
+        UniqueConstraint(
+            "assignment_id", "measured_at", name="uq_reading_assignment_measured_at"
+        ),
         CheckConstraint("voltage_v BETWEEN 0 AND 300", name="ck_reading_voltage"),
         CheckConstraint("current_a >= 0", name="ck_reading_current"),
         CheckConstraint("power_w >= 0", name="ck_reading_power"),
@@ -36,15 +43,21 @@ class Reading(Base):
         Index("ix_reading_business_measured_at", "business_id", "measured_at"),
     )
 
-    reading_id: Mapped[int] = mapped_column(BigInteger, Identity(always=True), primary_key=True)
+    reading_id: Mapped[int] = mapped_column(
+        BigInteger, Identity(always=True), primary_key=True
+    )
     assignment_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("meter_assignment.assignment_id"), nullable=False
     )
     business_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("business.business_id"), nullable=False
     )
-    measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    measured_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
     voltage_v: Mapped[Decimal] = mapped_column(Numeric(6, 2), nullable=False)
     current_a: Mapped[Decimal] = mapped_column(Numeric(7, 3), nullable=False)
     power_w: Mapped[Decimal] = mapped_column(Numeric(9, 2), nullable=False)
