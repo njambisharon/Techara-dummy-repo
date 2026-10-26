@@ -10,24 +10,10 @@ jobs:
   tests:
     name: Tests and coverage
     runs-on: [self-hosted, classroom-ci]
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: gridfit_test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       DATABASE_URL: "sqlite://"
       JWT_SECRET: "test-only-signing-key-do-not-use-in-production"
-      TEST_DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:5432/gridfit_test_db"
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
