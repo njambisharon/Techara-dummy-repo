@@ -9,10 +9,10 @@ from sqlalchemy import (
     Index,
     String,
     UniqueConstraint,
+    Uuid,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -49,16 +49,16 @@ class MeterAssignment(Base):
     )
 
     assignment_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
     )
     device_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("sensor_device.device_id"),
         nullable=False,
         index=True,
     )
     business_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("business.business_id"),
         nullable=False,
         index=True,
@@ -69,7 +69,7 @@ class MeterAssignment(Base):
     )
     removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     installed_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+        Uuid, ForeignKey("users.user_id"), nullable=False
     )
 
     device: Mapped["SensorDevice"] = relationship(back_populates="assignments")

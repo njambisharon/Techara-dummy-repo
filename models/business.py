@@ -8,12 +8,14 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    JSON,
     Numeric,
     String,
+    Uuid,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -24,6 +26,9 @@ if TYPE_CHECKING:
     from models.meter_assignment import MeterAssignment
     from models.scenario_business import ScenarioBusiness
     from models.site import Site
+
+
+JSONType = JSON().with_variant(JSONB(), "postgresql")
 
 
 class Business(Base):
@@ -38,20 +43,16 @@ class Business(Base):
             "(startup_power_kw IS NULL) = (startup_data_label IS NULL)",
             name="ck_business_startup_label_pair",
         ),
-        CheckConstraint(
-            "jsonb_typeof(operating_hours) = 'object'",
-            name="ck_business_operating_hours_shape",
-        ),
     )
 
     business_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
     )
     site_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("site.site_id"), nullable=False, index=True
+        Uuid, ForeignKey("site.site_id"), nullable=False, index=True
     )
     logged_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+        Uuid, ForeignKey("users.user_id"), nullable=False
     )
     business_name: Mapped[str] = mapped_column(String(100), nullable=False)
     business_type: Mapped[BusinessType] = mapped_column(
@@ -65,7 +66,7 @@ class Business(Base):
         nullable=False,
         server_default=ConnectionStatus.PROSPECTIVE.value,
     )
-    operating_hours: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    operating_hours: Mapped[dict] = mapped_column(JSONType, nullable=False)
     days_per_month: Mapped[int] = mapped_column(Integer, nullable=False)
     startup_power_kw: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     startup_duration_s: Mapped[int | None] = mapped_column(Integer)

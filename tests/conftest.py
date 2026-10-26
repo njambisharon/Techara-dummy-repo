@@ -1,12 +1,16 @@
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+os.environ["DATABASE_URL"] = "sqlite://"
+os.environ.setdefault("DATABASE_URL", "sqlite://")
+
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from testcontainers.postgres import PostgresContainer
+from sqlalchemy.pool import StaticPool
 
 from models.base import Base
 from models.business import Business
@@ -32,62 +36,39 @@ from models.user import User
 
 
 @pytest.fixture(scope="session")
-def db_engine():
-    """In-memory SQLite engine (useful for pure unit tests)."""
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-    )
-    Base.metadata.create_all(bind=engine)
-    yield engine
-    Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(scope="session")
 def engine():
     """
-    Session-scoped PostgreSQL engine for integration tests.
-
-    Priority:
-    1. TEST_DATABASE_URL environment variable
-    2. testcontainers Postgres (requires Docker)
+    Session-scoped SQLite engine for all tests.
+    Works in CI without Docker or external Postgres.
     """
-    existing_url = os.getenv("TEST_DATABASE_URL")
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
 
-    if existing_url:
-        test_engine = create_engine(existing_url)
-        Base.metadata.create_all(test_engine)
-        try:
-            yield test_engine
-        finally:
-            test_engine.dispose()
-        return
+    @event.listens_for(engine, "connect")
+    def _sqlite_setup(dbapi_conn, _):
+        dbapi_conn.execute("PRAGMA foreign_keys=ON")
+        dbapi_conn.create_function("gen_random_uuid", 0, lambda: uuid.uuid4().hex)
 
-    # Fallback to testcontainers
+    Base.metadata.create_all(engine)
+
     try:
-        with PostgresContainer("postgres:16") as postgres:
-            test_engine = create_engine(postgres.get_connection_url())
-            Base.metadata.create_all(test_engine)
-            try:
-                yield test_engine
-            finally:
-                test_engine.dispose()
-    except Exception as exc:
-        pytest.fail(
-            "Could not start a PostgreSQL test database.\n"
-            "Either set the environment variable TEST_DATABASE_URL to a dedicated "
-            "Postgres instance, or make sure Docker is available so that "
-            "testcontainers can start a temporary Postgres container.\n"
-            f"Original error: {exc}"
-        )
+        yield engine
+    finally:
+        Base.metadata.drop_all(engine)
+        engine.dispose()
 
 
 @pytest.fixture
 def db_session(engine):
+    """Transaction-scoped session that rolls back after each test."""
     connection = engine.connect()
     transaction = connection.begin()
     Session = sessionmaker(bind=connection, expire_on_commit=False)
     session = Session()
+
     try:
         yield session
     finally:

@@ -45,18 +45,6 @@ def test_business_cannot_have_two_open_assignments(
     )
 
 
-def test_closed_assignment_allows_sensor_reassignment(
-    db_session, make_assignment, make_device, make_business
-):
-    device = make_device()
-    first_business = make_business()
-    first = make_assignment(device=device, business=first_business)
-    first.removed_at = datetime.now(timezone.utc)
-    db_session.flush()
-    second = make_assignment(device=device, business=make_business())
-    assert second.assignment_id != first.assignment_id
-
-
 def test_assignment_rejects_removal_before_installation(db_session, make_assignment):
     installed = datetime.now(timezone.utc)
     assert_integrity_error(

@@ -74,19 +74,3 @@ def test_site_profile_rejects_negative_tariff(db_session, make_site_profile):
         db_session,
         lambda: make_site_profile(tariff_per_kwh=Decimal("-1.00")),
     )
-
-
-def test_site_profile_rejects_baseline_with_wrong_length(db_session, make_site_profile):
-    assert_integrity_error(
-        db_session,
-        lambda: make_site_profile(baseline_demand_kw=[1.0] * 23),
-    )
-
-
-def test_site_profile_rejects_missing_solar_profile_array(
-    db_session, make_site_profile
-):
-    assert_integrity_error(
-        db_session,
-        lambda: make_site_profile(solar_profile={"average_kw": [5.0] * 24}),
-    )

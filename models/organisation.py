@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, func, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, String, Uuid, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -19,7 +18,7 @@ class Organisation(Base):
     __tablename__ = "organisation"
 
     organisation_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
     )
     organisation_name: Mapped[str] = mapped_column(
         String(100), nullable=False, unique=True

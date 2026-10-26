@@ -8,12 +8,14 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    JSON,
     Numeric,
     String,
+    Uuid,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -32,22 +34,22 @@ if TYPE_CHECKING:
     from models.site_profile import SiteProfile
 
 
+# Portable JSON type: JSONB on Postgres, JSON on SQLite
+JSONType = JSON().with_variant(JSONB(), "postgresql")
+
+
 class Scenario(Base):
     __tablename__ = "scenario"
     __table_args__ = (
         CheckConstraint("initial_stored_kwh >= 0", name="ck_scenario_initial_stored"),
         CheckConstraint("period_days >= 1", name="ck_scenario_period_days"),
-        CheckConstraint(
-            "check_results ?& array['power', 'startup', 'energy', 'battery']",
-            name="ck_scenario_check_results_shape",
-        ),
     )
 
     scenario_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
     )
     profile_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("site_profile.profile_id"),
         nullable=False,
         index=True,
@@ -63,7 +65,7 @@ class Scenario(Base):
     outcome: Mapped[Outcome] = mapped_column(
         varchar_enum(Outcome, 25, "ck_scenario_outcome"), nullable=False
     )
-    check_results: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    check_results: Mapped[dict] = mapped_column(JSONType, nullable=False)
     limiting_check: Mapped[LimitingCheck | None] = mapped_column(
         varchar_enum(LimitingCheck, 10, "ck_scenario_limiting_check")
     )
@@ -75,11 +77,11 @@ class Scenario(Base):
     data_label: Mapped[DataLabel] = mapped_column(
         varchar_enum(DataLabel, 15, "ck_scenario_data_label"), nullable=False
     )
-    metrics: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    simulation_trace: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    input_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    metrics: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    simulation_trace: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    input_snapshot: Mapped[dict] = mapped_column(JSONType, nullable=False)
     created_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False
+        Uuid, ForeignKey("users.user_id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

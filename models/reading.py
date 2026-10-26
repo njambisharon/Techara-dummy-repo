@@ -4,18 +4,17 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    BigInteger,
     CheckConstraint,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
-    Identity,
     Index,
+    Integer,
     Numeric,
     UniqueConstraint,
+    Uuid,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -44,13 +43,14 @@ class Reading(Base):
     )
 
     reading_id: Mapped[int] = mapped_column(
-        BigInteger, Identity(always=True), primary_key=True
+        Integer, primary_key=True, autoincrement=True
     )
+
     assignment_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("meter_assignment.assignment_id"), nullable=False
+        Uuid, ForeignKey("meter_assignment.assignment_id"), nullable=False
     )
     business_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("business.business_id"), nullable=False
+        Uuid, ForeignKey("business.business_id"), nullable=False
     )
     measured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False

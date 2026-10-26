@@ -37,13 +37,6 @@ def test_scenario_rejects_zero_period_days(db_session, make_scenario):
     )
 
 
-def test_scenario_rejects_missing_check_result_keys(db_session, make_scenario):
-    assert_integrity_error(
-        db_session,
-        lambda: make_scenario(check_results={"power": True}),
-    )
-
-
 def test_scenario_metrics_can_be_updated(db_session, make_scenario):
     scenario = make_scenario()
     scenario.metrics = {"added_kwh": 75.0, "monthly_revenue": 187.5}

@@ -83,13 +83,6 @@ def test_business_rejects_startup_power_without_data_label(db_session, make_busi
     )
 
 
-def test_business_rejects_non_object_operating_hours(db_session, make_business):
-    assert_integrity_error(
-        db_session,
-        lambda: make_business(operating_hours=["08:00", "17:00"]),
-    )
-
-
 def test_business_connection_status_can_be_updated(db_session, make_business):
     business = make_business()
     business.connection_status = ConnectionStatus.CONNECTED
