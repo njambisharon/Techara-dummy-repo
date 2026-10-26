@@ -1,29 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
-from uuid import uuid4
 
 import pytest
-from sqlalchemy import CheckConstraint, UniqueConstraint, inspect, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import configure_mappers
 
-import models
 from models.base import Base
-from models.enums import (
-    BusinessType, ConnectionStatus, DataLabel, Decision, DeviceStatus,
-    LimitingCheck, Outcome, RevenueBasis, SolarDayType, StartupDataLabel,
-    UserRole,
-)
-from models.organisation import Organisation
-from models.user import User
-from models.site import Site
-from models.site_profile import SiteProfile
-from models.business import Business
-from models.sensor_device import SensorDevice
-from models.meter_assignment import MeterAssignment
 from models.reading import Reading
-from models.scenario import Scenario
-from models.scenario_business import ScenarioBusiness
 
 
 def table(name):
@@ -59,7 +41,9 @@ def test_reading_rejects_invalid_measurements(db_session, make_reading, field, v
     )
 
 
-def test_reading_rejects_duplicate_timestamp_for_same_assignment(db_session, make_assignment, make_reading):
+def test_reading_rejects_duplicate_timestamp_for_same_assignment(
+    db_session, make_assignment, make_reading
+):
     assignment = make_assignment()
     measured_at = datetime.now(timezone.utc)
     make_reading(assignment=assignment, measured_at=measured_at)
@@ -69,7 +53,9 @@ def test_reading_rejects_duplicate_timestamp_for_same_assignment(db_session, mak
     )
 
 
-def test_reading_allows_same_timestamp_for_different_assignments(db_session, make_assignment, make_reading):
+def test_reading_allows_same_timestamp_for_different_assignments(
+    db_session, make_assignment, make_reading
+):
     timestamp = datetime.now(timezone.utc)
     first = make_assignment()
     second = make_assignment()
@@ -78,7 +64,9 @@ def test_reading_allows_same_timestamp_for_different_assignments(db_session, mak
     assert a.reading_id != b.reading_id
 
 
-def test_reading_rejects_business_mismatch_for_assignment(db_session, make_assignment, make_business):
+def test_reading_rejects_business_mismatch_for_assignment(
+    db_session, make_assignment, make_business
+):
     assignment = make_assignment()
     other_business = make_business()
     assert_integrity_error(

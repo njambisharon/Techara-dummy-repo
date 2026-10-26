@@ -7,19 +7,23 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import models
 from models.base import Base
 from models.business import Business
 from models.enums import (
-    BusinessType, ConnectionStatus, DataLabel, Decision, DeviceStatus,
-    LimitingCheck, Outcome, RevenueBasis, SolarDayType, StartupDataLabel,
+    BusinessType,
+    ConnectionStatus,
+    DataLabel,
+    DeviceStatus,
+    LimitingCheck,
+    Outcome,
+    RevenueBasis,
+    SolarDayType,
     UserRole,
 )
 from models.meter_assignment import MeterAssignment
 from models.organisation import Organisation
 from models.reading import Reading
 from models.scenario import Scenario
-from models.scenario_business import ScenarioBusiness
 from models.sensor_device import SensorDevice
 from models.site import Site
 from models.site_profile import SiteProfile
@@ -34,7 +38,9 @@ def engine():
             "Set TEST_DATABASE_URL to a dedicated PostgreSQL test database "
             "before running the integration tests."
         )
-    if not url.startswith(("postgresql://", "postgresql+psycopg://", "postgresql+psycopg2://")):
+    if not url.startswith(
+        ("postgresql://", "postgresql+psycopg://", "postgresql+psycopg2://")
+    ):
         pytest.fail("TEST_DATABASE_URL must point to PostgreSQL.")
     test_engine = create_engine(url)
     Base.metadata.create_all(test_engine)
@@ -65,23 +71,30 @@ def make_org(db_session):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
 @pytest.fixture
 def make_user(db_session, make_org):
-    def factory(org=None, role=UserRole.OPERATOR, email=None, phone=None, created_by=None):
+    def factory(
+        org=None, role=UserRole.OPERATOR, email=None, phone=None, created_by=None
+    ):
         org = org or make_org()
         suffix = uuid4().hex[:8]
         item = User(
             organisation_id=org.organisation_id,
             first_name="Test",
             last_name="User",
-            email=email if email is not None else (
-                f"user-{suffix}@example.com" if role == UserRole.OPERATOR else None
-            ),
-            phone_number=phone if phone is not None else (
-                f"+26097{uuid4().int % 10**7:07d}" if role == UserRole.FIELD_AGENT else None
+            email=email
+            if email is not None
+            else (f"user-{suffix}@example.com" if role == UserRole.OPERATOR else None),
+            phone_number=phone
+            if phone is not None
+            else (
+                f"+26097{uuid4().int % 10**7:07d}"
+                if role == UserRole.FIELD_AGENT
+                else None
             ),
             password_hash="test-password-hash",
             role=role,
@@ -90,6 +103,7 @@ def make_user(db_session, make_org):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -107,6 +121,7 @@ def make_site(db_session, make_org, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -147,6 +162,7 @@ def make_site_profile(db_session, make_site, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -172,6 +188,7 @@ def make_business(db_session, make_site, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -192,6 +209,7 @@ def make_device(db_session, make_org, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -214,6 +232,7 @@ def make_assignment(db_session, make_device, make_business, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -235,6 +254,7 @@ def make_reading(db_session, make_assignment):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
 
 
@@ -251,7 +271,10 @@ def make_scenario(db_session, make_site_profile, make_user):
             period_days=7,
             outcome=Outcome.CONDITIONALLY_FEASIBLE,
             check_results={
-                "power": True, "startup": True, "energy": False, "battery": True
+                "power": True,
+                "startup": True,
+                "energy": False,
+                "battery": True,
             },
             limiting_check=LimitingCheck.ENERGY,
             monthly_revenue=Decimal("125.00"),
@@ -268,4 +291,5 @@ def make_scenario(db_session, make_site_profile, make_user):
         db_session.add(item)
         db_session.flush()
         return item
+
     return factory
