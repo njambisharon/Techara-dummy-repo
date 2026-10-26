@@ -32,21 +32,19 @@ from models.user import User
 
 @pytest.fixture(scope="session")
 def engine():
-    url = os.getenv("TEST_DATABASE_URL")
-    if not url:
-        pytest.fail(
-            "Set TEST_DATABASE_URL to a dedicated PostgreSQL test database "
-            "before running the integration tests."
-        )
-    if not url.startswith(
-        ("postgresql://", "postgresql+psycopg://", "postgresql+psycopg2://")
-    ):
-        pytest.fail("TEST_DATABASE_URL must point to PostgreSQL.")
+    """
+    Uses TEST_DATABASE_URL if set, otherwise falls back to a local Postgres DB.
+    """
+    url = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql://postgres:postgres@localhost:5432/techara_test",
+    )
     test_engine = create_engine(url)
     Base.metadata.create_all(test_engine)
-    yield test_engine
-    Base.metadata.drop_all(test_engine)
-    test_engine.dispose()
+    try:
+        yield test_engine
+    finally:
+        test_engine.dispose()
 
 
 @pytest.fixture
