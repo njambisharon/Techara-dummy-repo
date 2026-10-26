@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from testcontainers.postgres import PostgresContainer
 
 from models.base import Base
 from models.business import Business
@@ -31,20 +32,54 @@ from models.user import User
 
 
 @pytest.fixture(scope="session")
+def db_engine():
+    """In-memory SQLite engine (useful for pure unit tests)."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(scope="session")
 def engine():
     """
-    Uses TEST_DATABASE_URL if set, otherwise falls back to a local Postgres DB.
+    Session-scoped PostgreSQL engine for integration tests.
+
+    Priority:
+    1. TEST_DATABASE_URL environment variable
+    2. testcontainers Postgres (requires Docker)
     """
-    url = os.getenv(
-        "TEST_DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/techara_test",
-    )
-    test_engine = create_engine(url)
-    Base.metadata.create_all(test_engine)
+    existing_url = os.getenv("TEST_DATABASE_URL")
+
+    if existing_url:
+        test_engine = create_engine(existing_url)
+        Base.metadata.create_all(test_engine)
+        try:
+            yield test_engine
+        finally:
+            test_engine.dispose()
+        return
+
+    # Fallback to testcontainers
     try:
-        yield test_engine
-    finally:
-        test_engine.dispose()
+        with PostgresContainer("postgres:16") as postgres:
+            test_engine = create_engine(postgres.get_connection_url())
+            Base.metadata.create_all(test_engine)
+            try:
+                yield test_engine
+            finally:
+                test_engine.dispose()
+    except Exception as exc:
+        pytest.fail(
+            "Could not start a PostgreSQL test database.\n"
+            "Either set the environment variable TEST_DATABASE_URL to a dedicated "
+            "Postgres instance, or make sure Docker is available so that "
+            "testcontainers can start a temporary Postgres container.\n"
+            f"Original error: {exc}"
+        )
 
 
 @pytest.fixture
