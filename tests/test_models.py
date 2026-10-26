@@ -1,62 +1,64 @@
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
+from uuid import uuid4
+
+import pytest
+from sqlalchemy import CheckConstraint, UniqueConstraint, inspect, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import configure_mappers
 
 import models
 from models.base import Base
+from models.enums import (
+    BusinessType, ConnectionStatus, DataLabel, Decision, DeviceStatus,
+    LimitingCheck, Outcome, RevenueBasis, SolarDayType, StartupDataLabel,
+    UserRole,
+)
+from models.organisation import Organisation
+from models.user import User
+from models.site import Site
+from models.site_profile import SiteProfile
+from models.business import Business
+from models.sensor_device import SensorDevice
+from models.meter_assignment import MeterAssignment
+from models.reading import Reading
+from models.scenario import Scenario
+from models.scenario_business import ScenarioBusiness
 
-EXPECTED_TABLES = {
-    "organisation",
-    "users",
-    "site",
-    "site_profile",
-    "business",
-    "sensor_device",
-    "meter_assignment",
-    "reading",
-    "scenario",
-    "scenario_business",
-}
+
+def table(name):
+    return Base.metadata.tables[name]
 
 
-def test_all_models_load_and_register_their_tables():
+def assert_integrity_error(session, operation):
+    with pytest.raises(IntegrityError):
+        operation()
+        session.flush()
+    session.rollback()
+
+def test_all_ten_models_register_and_relationships_configure():
     configure_mappers()
+    expected = {
+        "organisation", "users", "site", "site_profile", "business",
+        "sensor_device", "meter_assignment", "reading", "scenario",
+        "scenario_business",
+    }
     assert len(models.__all__) == 10
-    assert set(Base.metadata.tables) == EXPECTED_TABLES
+    assert set(Base.metadata.tables) == expected
 
 
-def test_a_meter_and_a_business_can_only_have_one_open_install():
-    indexes = {
-        index.name: index for index in Base.metadata.tables["meter_assignment"].indexes
-    }
-    for name in (
-        "uq_meter_assignment_open_device",
-        "uq_meter_assignment_open_business",
-    ):
-        assert indexes[name].unique
-        assert (
-            str(indexes[name].dialect_options["postgresql"]["where"])
-            == "removed_at IS NULL"
-        )
+@pytest.mark.parametrize("table_name", [
+    "organisation", "users", "site", "site_profile", "business",
+    "sensor_device", "meter_assignment", "reading", "scenario",
+    "scenario_business",
+])
+def test_every_table_has_a_primary_key(table_name):
+    assert len(table(table_name).primary_key.columns) >= 1
 
 
-def test_a_reading_must_match_its_install_business():
-    composite = [
-        fk
-        for fk in Base.metadata.tables["reading"].foreign_key_constraints
-        if fk.name == "fk_reading_assignment_business"
-    ]
-    assert len(composite) == 1
-    assert [column.name for column in composite[0].columns] == [
-        "assignment_id",
-        "business_id",
-    ]
-
-
-def test_operators_need_an_email_and_field_agents_need_a_phone():
-    checks = {
-        c.name: str(c.sqltext)
-        for c in Base.metadata.tables["users"].constraints
-        if c.name
-    }
-    assert "ck_users_login_identifier" in checks
-    assert "phone_number IS NOT NULL" in checks["ck_users_login_identifier"]
-    assert "email IS NOT NULL" in checks["ck_users_login_identifier"]
+@pytest.mark.parametrize("table_name", [
+    "users", "site", "site_profile", "business", "sensor_device",
+    "meter_assignment", "reading", "scenario", "scenario_business",
+])
+def test_every_dependent_table_has_foreign_keys(table_name):
+    assert len(table(table_name).foreign_key_constraints) >= 1

@@ -65,6 +65,7 @@ class SiteProfile(Base):
             name="ck_site_profile_baseline_shape",
         ),
         CheckConstraint(
+            "solar_profile ? 'average_kw' AND solar_profile ? 'low_sun_kw' AND "
             "jsonb_typeof(solar_profile -> 'average_kw') = 'array' "
             "AND jsonb_array_length(solar_profile -> 'average_kw') = 24 "
             "AND jsonb_typeof(solar_profile -> 'low_sun_kw') = 'array' "
