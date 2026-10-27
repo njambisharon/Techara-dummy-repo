@@ -1,46 +1,74 @@
-from typing import TYPE_CHECKING
-import uuid
-from datetime import datetime
-
-from sqlalchemy import DateTime, ForeignKey, String, Uuid, func, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    String,
+    Uuid,
+    func,
+    text,
+)
+from sqlalchemy.orm import relationship
 
 from models.base import Base
 from models.enums import DeviceStatus, varchar_enum
 
 
-if TYPE_CHECKING:
-    from models.meter_assignment import MeterAssignment
-    from models.organisation import Organisation
-
-
 class SensorDevice(Base):
     __tablename__ = "sensor_device"
 
-    device_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
+    device_id = Column(
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
     )
-    organisation_id: Mapped[uuid.UUID] = mapped_column(
+
+    organisation_id = Column(
         Uuid,
         ForeignKey("organisation.organisation_id"),
         nullable=False,
         index=True,
     )
-    device_serial: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    model: Mapped[str] = mapped_column(
-        String(50), nullable=False, server_default="PZEM-004T"
+
+    device_serial = Column(
+        String(50),
+        nullable=False,
+        unique=True,
     )
-    status: Mapped[DeviceStatus] = mapped_column(
-        varchar_enum(DeviceStatus, 15, "ck_sensor_device_status"),
+
+    model = Column(
+        String(50),
+        nullable=False,
+        server_default="PZEM-004T",
+    )
+
+    status = Column(
+        varchar_enum(
+            DeviceStatus,
+            15,
+            "ck_sensor_device_status",
+        ),
         nullable=False,
         server_default=DeviceStatus.ACTIVE.value,
     )
-    registered_by: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("users.user_id"), nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+
+    registered_by = Column(
+        Uuid,
+        ForeignKey("users.user_id"),
+        nullable=False,
     )
 
-    organisation: Mapped["Organisation"] = relationship(back_populates="sensor_devices")
-    assignments: Mapped[list["MeterAssignment"]] = relationship(back_populates="device")
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    organisation = relationship(
+        "Organisation",
+        back_populates="sensor_devices",
+    )
+
+    assignments = relationship(
+        "MeterAssignment",
+        back_populates="device",
+    )

@@ -1,47 +1,76 @@
-from typing import TYPE_CHECKING
-import uuid
-from datetime import datetime
-
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, Uuid, func, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    Uuid,
+    func,
+    text,
+)
+from sqlalchemy.orm import relationship
 
 from models.base import Base
 
 
-if TYPE_CHECKING:
-    from models.business import Business
-    from models.organisation import Organisation
-    from models.site_profile import SiteProfile
-
-
 class Site(Base):
     __tablename__ = "site"
+
     __table_args__ = (
         UniqueConstraint(
-            "organisation_id", "site_name", name="uq_site_organisation_name"
+            "organisation_id",
+            "site_name",
+            name="uq_site_organisation_name",
         ),
     )
 
-    site_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
+    site_id = Column(
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
     )
-    organisation_id: Mapped[uuid.UUID] = mapped_column(
+
+    organisation_id = Column(
         Uuid,
         ForeignKey("organisation.organisation_id"),
         nullable=False,
         index=True,
     )
-    site_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    district: Mapped[str] = mapped_column(String(100), nullable=False)
-    created_by: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("users.user_id"), nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+
+    site_name = Column(
+        String(100),
+        nullable=False,
     )
 
-    organisation: Mapped["Organisation"] = relationship(back_populates="sites")
-    profiles: Mapped[list["SiteProfile"]] = relationship(
-        back_populates="site", order_by="SiteProfile.version"
+    district = Column(
+        String(100),
+        nullable=False,
     )
-    businesses: Mapped[list["Business"]] = relationship(back_populates="site")
+
+    created_by = Column(
+        Uuid,
+        ForeignKey("users.user_id"),
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    organisation = relationship(
+        "Organisation",
+        back_populates="sites",
+    )
+
+    profiles = relationship(
+        "SiteProfile",
+        back_populates="site",
+        order_by="SiteProfile.version",
+    )
+
+    businesses = relationship(
+        "Business",
+        back_populates="site",
+    )

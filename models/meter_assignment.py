@@ -1,9 +1,6 @@
-from typing import TYPE_CHECKING
-import uuid
-from datetime import datetime
-
 from sqlalchemy import (
     CheckConstraint,
+    Column,
     DateTime,
     ForeignKey,
     Index,
@@ -13,22 +10,19 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import relationship
 
 from models.base import Base
 
 
-if TYPE_CHECKING:
-    from models.business import Business
-    from models.reading import Reading
-    from models.sensor_device import SensorDevice
-
-
 class MeterAssignment(Base):
     __tablename__ = "meter_assignment"
+
     __table_args__ = (
         UniqueConstraint(
-            "assignment_id", "business_id", name="uq_meter_assignment_id_business"
+            "assignment_id",
+            "business_id",
+            name="uq_meter_assignment_id_business",
         ),
         CheckConstraint(
             "removed_at > installed_at",
@@ -48,33 +42,60 @@ class MeterAssignment(Base):
         ),
     )
 
-    assignment_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, primary_key=True, server_default=text("gen_random_uuid()")
+    assignment_id = Column(
+        Uuid,
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
     )
-    device_id: Mapped[uuid.UUID] = mapped_column(
+
+    device_id = Column(
         Uuid,
         ForeignKey("sensor_device.device_id"),
         nullable=False,
         index=True,
     )
-    business_id: Mapped[uuid.UUID] = mapped_column(
+
+    business_id = Column(
         Uuid,
         ForeignKey("business.business_id"),
         nullable=False,
         index=True,
     )
-    device_token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    installed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-    removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    installed_by: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("users.user_id"), nullable=False
+
+    device_token_hash = Column(
+        String(255),
+        nullable=False,
     )
 
-    device: Mapped["SensorDevice"] = relationship(back_populates="assignments")
-    business: Mapped["Business"] = relationship(back_populates="assignments")
-    readings: Mapped[list["Reading"]] = relationship(
+    installed_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    removed_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    installed_by = Column(
+        Uuid,
+        ForeignKey("users.user_id"),
+        nullable=False,
+    )
+
+    device = relationship(
+        "SensorDevice",
+        back_populates="assignments",
+    )
+
+    business = relationship(
+        "Business",
+        back_populates="assignments",
+    )
+
+    readings = relationship(
+        "Reading",
         back_populates="assignment",
         foreign_keys="Reading.assignment_id",
         primaryjoin="MeterAssignment.assignment_id == Reading.assignment_id",
