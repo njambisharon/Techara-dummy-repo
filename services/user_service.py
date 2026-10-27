@@ -141,3 +141,18 @@ def create_operator(
         "temporary_password": temporary_password,
         "message": "Operator account created. Share the temporary password securely.",
     }
+
+def list_organisation_users(
+    db: Session,
+    current_user: User,
+) -> list[UserProfileResponse]:
+    users = db.scalars(
+        select(User)
+        .where(User.organisation_id == current_user.organisation_id)
+        .order_by(User.created_at.desc())
+    ).all()
+
+    return [
+        UserProfileResponse.model_validate(user)
+        for user in users
+    ]

@@ -13,6 +13,7 @@ from services.user_service import (
     create_field_agent,
     create_operator,
     get_current_user_profile,
+    list_organisation_users,
     update_current_user_profile,
 )
 
@@ -57,3 +58,10 @@ def create_operator_endpoint(
     current_user: User = Depends(require_roles(UserRole.OPERATOR)),
 ) -> CreateOperatorResponse:
     return create_operator(db, current_user, data)
+
+@router.get("/", response_model=list[UserProfileResponse])
+def list_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.OPERATOR)),
+) -> list[UserProfileResponse]:
+    return list_organisation_users(db, current_user)
