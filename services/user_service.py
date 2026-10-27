@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from core.exceptions import ConflictError, ForbiddenError
 from models.enums import UserRole
 from models.user import User
-from schemas.user import CreateFieldAgentRequest,UserProfileResponse, UserProfileUpdateRequest
+from schemas.user import CreateFieldAgentRequest, CreateOperatorRequest, UserProfileResponse, UserProfileUpdateRequest
 
 
 def get_current_user_profile(current_user: User) -> UserProfileResponse:
@@ -92,4 +92,52 @@ def create_field_agent(db: Session, current_user: User, data: CreateFieldAgentRe
         "user": UserProfileResponse.model_validate(field_agent),
         "temporary_password": temporary_password,
         "message": "Field operator account created. Share the temporary password securely.",
+    }
+
+def create_operator(
+    db: Session,
+    current_user: User,
+    data: CreateOperatorRequest,
+) -> dict:
+    if current_user.role != UserRole.OPERATOR:
+        raise ForbiddenError("Only mini-grid operators can create operator accounts")
+
+    email = str(data.email).strip().lower()
+
+    existing_user = db.scalar(
+        select(User).where(User.email.ilike(email))
+    )
+    if existing_user:
+        raise ConflictError("This email address is already registered")
+
+    alphabet = string.ascii_letters + string.digits
+    temporary_password = "".join(
+        secrets.choice(alphabet) for _ in range(12)
+    )
+
+    operator = User(
+        organisation_id=current_user.organisation_id,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        email=email,
+        password_hash=password_hasher.hash(temporary_password),
+        role=UserRole.OPERATOR,
+        must_change_password=True,
+        created_by=current_user.user_id,
+    )
+
+    try:
+        db.add(operator)
+        db.commit()
+        db.refresh(operator)
+    except IntegrityError:
+        db.rollback()
+        raise ConflictError(
+            "This email address is already registered"
+        ) from None
+
+    return {
+        "user": UserProfileResponse.model_validate(operator),
+        "temporary_password": temporary_password,
+        "message": "Operator account created. Share the temporary password securely.",
     }

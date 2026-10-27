@@ -58,3 +58,27 @@ class CreateFieldAgentResponse(BaseModel):
     user: UserProfileResponse
     temporary_password: str
     message: str
+
+class CreateOperatorRequest(BaseModel):
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+
+    @model_validator(mode="after")
+    def validate_fields(self):
+        self.first_name = self.first_name.strip()
+        self.last_name = self.last_name.strip()
+
+        if not self.first_name:
+            raise ValueError("first_name cannot be empty")
+        if not self.last_name:
+            raise ValueError("last_name cannot be empty")
+
+        self.email = str(self.email).strip().lower()
+        return self
+
+
+class CreateOperatorResponse(BaseModel):
+    user: UserProfileResponse
+    temporary_password: str
+    message: str

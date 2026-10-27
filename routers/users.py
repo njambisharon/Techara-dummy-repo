@@ -8,8 +8,10 @@ from schemas.user import CreateFieldAgentRequest, CreateFieldAgentResponse
 from services.user_service import create_field_agent
 from database import get_db
 from models.user import User
-from schemas.user import UserProfileResponse, UserProfileUpdateRequest
+from schemas.user import CreateOperatorRequest, CreateOperatorResponse, UserProfileResponse, UserProfileUpdateRequest
 from services.user_service import (
+    create_field_agent,
+    create_operator,
     get_current_user_profile,
     update_current_user_profile,
 )
@@ -43,3 +45,15 @@ def create_field_agent_endpoint(
     current_user: User = Depends(require_roles(UserRole.OPERATOR)),
 ) -> CreateFieldAgentResponse:
     return create_field_agent(db, current_user, data)
+
+@router.post(
+    "/operators",
+    response_model=CreateOperatorResponse,
+    status_code=201,
+)
+def create_operator_endpoint(
+    data: CreateOperatorRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.OPERATOR)),
+) -> CreateOperatorResponse:
+    return create_operator(db, current_user, data)
