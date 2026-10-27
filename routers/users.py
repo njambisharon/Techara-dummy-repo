@@ -2,7 +2,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from core.dependencies import get_current_user
+from core.dependencies import get_current_user, require_roles
+from models.enums import UserRole
+from schemas.user import CreateFieldAgentRequest, CreateFieldAgentResponse
+from services.user_service import create_field_agent
 from database import get_db
 from models.user import User
 from schemas.user import UserProfileResponse, UserProfileUpdateRequest
@@ -28,3 +31,15 @@ def update_my_profile(
     current_user: User = Depends(get_current_user),
 ) -> UserProfileResponse:
     return update_current_user_profile(db, current_user, data)
+
+@router.post(
+    "/field-agents",
+    response_model=CreateFieldAgentResponse,
+    status_code=201,
+)
+def create_field_agent_endpoint(
+    data: CreateFieldAgentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.OPERATOR)),
+) -> CreateFieldAgentResponse:
+    return create_field_agent(db, current_user, data)

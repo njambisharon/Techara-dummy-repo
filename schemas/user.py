@@ -38,3 +38,23 @@ class UserProfileUpdateRequest(BaseModel):
                 raise ValueError(f"{field} cannot be null")
 
         return self
+
+class CreateFieldAgentRequest(BaseModel):
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    phone_number: str = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def validate_fields(self):
+        for field in ("first_name", "last_name", "phone_number"):
+            value = getattr(self, field).strip()
+            if not value:
+                raise ValueError(f"{field} cannot be empty")
+            setattr(self, field, value)
+        return self
+
+
+class CreateFieldAgentResponse(BaseModel):
+    user: UserProfileResponse
+    temporary_password: str
+    message: str

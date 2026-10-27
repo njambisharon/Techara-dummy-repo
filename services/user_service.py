@@ -1,10 +1,15 @@
+import secrets
+import string
 
+from pwdlib import PasswordHash
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from core.exceptions import ConflictError
+from core.exceptions import ConflictError, ForbiddenError
+from models.enums import UserRole
 from models.user import User
-from schemas.user import UserProfileResponse, UserProfileUpdateRequest
+from schemas.user import CreateFieldAgentRequest,UserProfileResponse, UserProfileUpdateRequest
 
 
 def get_current_user_profile(current_user: User) -> UserProfileResponse:
@@ -47,3 +52,44 @@ def update_current_user_profile(
     db.refresh(current_user)
 
     return UserProfileResponse.model_validate(current_user)
+
+password_hasher = PasswordHash.recommended()
+
+
+def create_field_agent(db: Session, current_user: User, data: CreateFieldAgentRequest) -> dict:
+    if current_user.role != UserRole.OPERATOR:
+        raise ForbiddenError("Only mini-grid operators can create field operators")
+
+    existing_phone = db.scalar(
+        select(User).where(User.phone_number == data.phone_number)
+    )
+    if existing_phone:
+        raise ConflictError("This phone number is already registered")
+
+    alphabet = string.ascii_letters + string.digits
+    temporary_password = "".join(secrets.choice(alphabet) for _ in range(12))
+
+    field_agent = User(
+        organisation_id=current_user.organisation_id,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        phone_number=data.phone_number,
+        password_hash=password_hasher.hash(temporary_password),
+        role=UserRole.FIELD_AGENT,
+        must_change_password=True,
+        created_by=current_user.user_id,
+    )
+
+    try:
+        db.add(field_agent)
+        db.commit()
+        db.refresh(field_agent)
+    except IntegrityError:
+        db.rollback()
+        raise ConflictError("This phone number is already registered") from None
+
+    return {
+        "user": UserProfileResponse.model_validate(field_agent),
+        "temporary_password": temporary_password,
+        "message": "Field operator account created. Share the temporary password securely.",
+    }
