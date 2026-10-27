@@ -9,7 +9,13 @@ from sqlalchemy.orm import Session
 from core.exceptions import ConflictError, ForbiddenError
 from models.enums import UserRole
 from models.user import User
-from schemas.user import CreateFieldAgentRequest, CreateOperatorRequest, UserProfileResponse, UserProfileUpdateRequest
+from schemas.user import (
+    CreateFieldAgentRequest,
+    CreateOperatorRequest,
+    UpdateUserStatusRequest,
+    UserProfileResponse,
+    UserProfileUpdateRequest,
+)
 
 
 def get_current_user_profile(current_user: User) -> UserProfileResponse:
@@ -156,3 +162,37 @@ def list_organisation_users(
         UserProfileResponse.model_validate(user)
         for user in users
     ]
+
+def update_user_status(
+    db: Session,
+    current_user: User,
+    user_id,
+    data: UpdateUserStatusRequest,
+) -> dict:
+    if current_user.role != UserRole.OPERATOR:
+        raise ForbiddenError("Only mini-grid operators can update user status")
+
+    user = db.scalar(
+        select(User).where(
+            User.user_id == user_id,
+            User.organisation_id == current_user.organisation_id,
+        )
+    )
+
+    if user is None:
+        from core.exceptions import NotFoundError
+        raise NotFoundError("User not found in your organisation")
+
+    if user.user_id == current_user.user_id and not data.is_active:
+        raise ForbiddenError("You cannot deactivate your own account")
+
+    user.is_active = data.is_active
+    db.commit()
+    db.refresh(user)
+
+    status_message = "activated" if user.is_active else "deactivated"
+
+    return {
+        "message": f"User {status_message} successfully",
+        "user": UserProfileResponse.model_validate(user),
+    }

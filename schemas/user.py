@@ -82,3 +82,11 @@ class CreateOperatorResponse(BaseModel):
     user: UserProfileResponse
     temporary_password: str
     message: str
+
+class UpdateUserStatusRequest(BaseModel):
+    is_active: bool
+
+
+class UpdateUserStatusResponse(BaseModel):
+    message: str
+    user: UserProfileResponse
