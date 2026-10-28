@@ -58,9 +58,7 @@ def signup(db: Session, data: SignupRequest) -> SignupResponse:
                 detail="An account with this email already exists.",
             )
 
-        existing_org = auth_repository.get_organisation_by_name(
-            db, organisation_name
-        )
+        existing_org = auth_repository.get_organisation_by_name(db, organisation_name)
         if existing_org:
             raise HTTPException(
                 status_code=409, detail="An organisation with this name already exists."
