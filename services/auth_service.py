@@ -120,6 +120,7 @@ def change_password(
         )
 
     user.password_hash = password_hasher.hash(data.new_password)
+    user.must_change_password = False
     db.commit()
 
     return ChangePasswordResponse(message="Password changed successfully")
