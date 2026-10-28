@@ -6,6 +6,7 @@ app = FastAPI(title="GridFit API")
 
 app.include_router(auth_router)
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
