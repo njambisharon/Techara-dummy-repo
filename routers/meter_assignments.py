@@ -1,8 +1,7 @@
 import uuid
-
+from core.dependencies import require_roles
 from core.roles import ALL_ROLES, FIELD_AGENT_ONLY
 from database import get_db
-from dependencies import require_roles
 from fastapi import APIRouter, Depends, status
 from models.user import User
 from schemas.meter_assignment import (

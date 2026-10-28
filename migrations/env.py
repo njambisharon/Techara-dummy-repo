@@ -6,6 +6,16 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from models.base import Base
+import models.user
+import models.business
+import models.meter_assignment
+import models.organisation
+import models.reading
+import models.scenario_business
+import models.scenario
+import models.sensor_device
+import models.site_profile
+import models.site  # noqa: F401
 
 load_dotenv()
 

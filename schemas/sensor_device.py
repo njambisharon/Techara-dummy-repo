@@ -11,7 +11,6 @@ class SensorDeviceCreate(BaseModel):
     organisation_id: uuid.UUID
     registered_by: uuid.UUID
     device_serial: str = Field(min_length=1, max_length=50)
-    model: str = Field(default="PZEM-004T", min_length=1, max_length=50)
 
 
 class SensorDeviceStatusUpdate(BaseModel):
@@ -24,7 +23,6 @@ class SensorDeviceRead(BaseModel):
     device_id: uuid.UUID
     organisation_id: uuid.UUID
     device_serial: str
-    model: str
     status: DeviceStatus
     registered_by: uuid.UUID
     created_at: datetime
