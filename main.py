@@ -1,6 +1,14 @@
 from fastapi import FastAPI
+from routers import (
+    meter_assignments,
+    readings,
+    sensor_devices,
+)
 
 app = FastAPI(title="GridFit", version="0.1.0")
+
+
+app.include_router(sensor_devices.router)
 
 
 @app.get("/health")
