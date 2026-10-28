@@ -5,10 +5,12 @@ from routers import (
     sensor_devices,
     site_profiles,
 )
+from routers.auth import router as auth_router
 
-app = FastAPI(title="GridFit", version="0.1.0")
+app = FastAPI(title="GridFit API")
 register_exception_handlers(app)
 
+app.include_router(auth_router)
 app.include_router(sensor_devices.router)
 app.include_router(site_profiles.router)
 
