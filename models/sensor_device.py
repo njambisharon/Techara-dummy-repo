@@ -35,12 +35,6 @@ class SensorDevice(Base):
         unique=True,
     )
 
-    model = Column(
-        String(50),
-        nullable=False,
-        server_default="PZEM-004T",
-    )
-
     status = Column(
         varchar_enum(
             DeviceStatus,

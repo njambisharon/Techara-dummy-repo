@@ -164,4 +164,4 @@ def test_register_stores_device_with_default_status(client, device_payload):
     response = register(client, device_payload)
 
     assert response.json()["status"] == "active"
-    assert response.json()["model"] == "PZEM-004T"
+    

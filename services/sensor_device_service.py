@@ -15,7 +15,6 @@ class SensorDeviceService:
         device = SensorDevice(
             organisation_id=data.organisation_id,
             device_serial=data.device_serial,
-            model=data.model,
             registered_by=data.registered_by,
         )
 
