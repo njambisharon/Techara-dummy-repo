@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from routers import (
-    meter_assignments,
-    readings,
     sensor_devices,
 )
 
