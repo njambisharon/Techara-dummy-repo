@@ -11,7 +11,6 @@ class SensorDeviceCreate(BaseModel):
     organisation_id: uuid.UUID
     registered_by: uuid.UUID
     device_serial: str = Field(min_length=1, max_length=50)
-    
 
 
 class SensorDeviceStatusUpdate(BaseModel):

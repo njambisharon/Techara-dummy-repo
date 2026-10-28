@@ -29,7 +29,6 @@ def device_payload(operator):
         "organisation_id": str(operator.organisation_id),
         "registered_by": str(operator.user_id),
         "device_serial": f"PZEM-{uuid.uuid4().hex[:8]}",
-        "model": "PZEM-004T",
     }
 
 
@@ -164,4 +163,3 @@ def test_register_stores_device_with_default_status(client, device_payload):
     response = register(client, device_payload)
 
     assert response.json()["status"] == "active"
-    
