@@ -108,7 +108,7 @@ class Reading(Base):
     assignment = relationship(
         "MeterAssignment",
         back_populates="readings",
-        foreign_keys=[assignment_id],
+        foreign_keys="[Reading.assignment_id]",
         primaryjoin="Reading.assignment_id == MeterAssignment.assignment_id",
         viewonly=True,
     )

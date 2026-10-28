@@ -214,7 +214,6 @@ def make_device(db_session, make_org, make_user):
         values = dict(
             organisation_id=org.organisation_id,
             device_serial=serial or f"DEV-{uuid4().hex[:10]}",
-            model="PZEM-004T",
             status=DeviceStatus.ACTIVE,
             registered_by=registrar.user_id,
         )

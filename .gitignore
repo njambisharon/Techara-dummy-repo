@@ -14,4 +14,10 @@ htmlcov/
 *.sqlite
 *.sqlite3
 .DS_Store
-.github/
+.github/.env
+.vscode/
+get-pip.py
+__pycache__/
+.pytest_cache/
+.coverage
+env/

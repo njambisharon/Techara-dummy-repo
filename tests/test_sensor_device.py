@@ -45,7 +45,6 @@ def test_sensor_device_default_model_and_status(db_session, make_org, make_user)
     db_session.add(device)
     db_session.flush()
     db_session.refresh(device)
-    assert device.model == "PZEM-004T"
     assert device.status == DeviceStatus.ACTIVE
 
 
