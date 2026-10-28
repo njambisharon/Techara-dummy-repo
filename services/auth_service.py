@@ -3,7 +3,6 @@ from pwdlib import PasswordHash
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from core.exceptions import ConflictError
 from core.security import create_access_token
 from models.enums import UserRole
 from models.organisation import Organisation
@@ -31,7 +30,10 @@ def signup(db: Session, data: SignupRequest) -> SignupResponse:
         return SignupResponse(message=SIGNUP_MESSAGE)
 
     if auth_repository.get_organisation_by_name(db, organisation_name):
-        raise ConflictError("An organisation with this name already exists.")
+        raise HTTPException(
+            status_code=409,
+            detail="An organisation with this name already exists."
+            )
 
     organisation = Organisation(organisation_name=organisation_name)
 
@@ -53,12 +55,14 @@ def signup(db: Session, data: SignupRequest) -> SignupResponse:
 
         existing_org = auth_repository.get_organisation_by_name(db, organisation_name)
         if existing_org:
-            raise ConflictError(
-                "An organisation with this name already exists."
+            raise HTTPException(
+            status_code=409,
+            detail="An organisation with this name already exists."
             ) from None
 
-        raise ConflictError(
-            "The account could not be created with those details."
+        raise HTTPException(
+            status_code=409,
+            detail="The account could not be created with those details."
         ) from None
 
     return SignupResponse(message=SIGNUP_MESSAGE)
