@@ -33,10 +33,15 @@ class ScenarioService:
     def load_businesses(self, db, business_ids, current_user):
         if len(set(business_ids)) != len(business_ids):
             raise InvalidDataError("A business can only be added to a scenario once")
-        return [
-            business_service.get_business(db, business_id, current_user)
-            for business_id in business_ids
-        ]
+        found = {
+            business.business_id: business
+            for business in scenario_repository.businesses_for_organisation(
+                db, business_ids, current_user.organisation_id
+            )
+        }
+        if len(found) != len(business_ids):
+            raise NotFoundError("Business not found")
+        return [found[business_id] for business_id in business_ids]
 
     def check_initial_stored(self, profile, initial_stored_kwh):
         nominal = float(profile.battery_nominal_kwh)

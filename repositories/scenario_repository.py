@@ -10,12 +10,14 @@ class ScenarioRepository:
     def add(self, db, scenario, business_ids):
         db.add(scenario)
         db.flush()
-        for business_id in business_ids:
-            db.add(
+        db.add_all(
+            [
                 ScenarioBusiness(
                     scenario_id=scenario.scenario_id, business_id=business_id
                 )
-            )
+                for business_id in business_ids
+            ]
+        )
         db.flush()
         return scenario
 
@@ -29,6 +31,16 @@ class ScenarioRepository:
             .join(Site, SiteProfile.site_id == Site.site_id)
             .where(Site.organisation_id == organisation_id)
         )
+
+    def businesses_for_organisation(self, db, business_ids, organisation_id):
+        return db.scalars(
+            select(Business)
+            .join(Site, Business.site_id == Site.site_id)
+            .where(
+                Business.business_id.in_(business_ids),
+                Site.organisation_id == organisation_id,
+            )
+        ).all()
 
     def get_row(self, db, scenario_id, organisation_id):
         return db.execute(
