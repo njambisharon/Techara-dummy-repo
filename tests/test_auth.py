@@ -90,7 +90,7 @@ def test_signup_duplicate_email_does_not_create_another_account(db_session):
             },
         )
 
-        assert response.status_code == 201
+        assert response.status_code == 409
         assert db_session.scalar(select(func.count()).select_from(User)) == before_users
         assert (
             db_session.scalar(select(func.count()).select_from(Organisation))

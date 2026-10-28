@@ -59,10 +59,13 @@ def update_current_user_profile(
 
     return UserProfileResponse.model_validate(current_user)
 
+
 password_hasher = PasswordHash.recommended()
 
 
-def create_field_agent(db: Session, current_user: User, data: CreateFieldAgentRequest) -> dict:
+def create_field_agent(
+    db: Session, current_user: User, data: CreateFieldAgentRequest
+) -> dict:
     if current_user.role != UserRole.OPERATOR:
         raise ForbiddenError("Only mini-grid operators can create field operators")
 
@@ -100,6 +103,7 @@ def create_field_agent(db: Session, current_user: User, data: CreateFieldAgentRe
         "message": "Field operator account created. Share the temporary password securely.",
     }
 
+
 def create_operator(
     db: Session,
     current_user: User,
@@ -110,16 +114,12 @@ def create_operator(
 
     email = str(data.email).strip().lower()
 
-    existing_user = db.scalar(
-        select(User).where(User.email.ilike(email))
-    )
+    existing_user = db.scalar(select(User).where(User.email.ilike(email)))
     if existing_user:
         raise ConflictError("This email address is already registered")
 
     alphabet = string.ascii_letters + string.digits
-    temporary_password = "".join(
-        secrets.choice(alphabet) for _ in range(12)
-    )
+    temporary_password = "".join(secrets.choice(alphabet) for _ in range(12))
 
     operator = User(
         organisation_id=current_user.organisation_id,
@@ -138,15 +138,14 @@ def create_operator(
         db.refresh(operator)
     except IntegrityError:
         db.rollback()
-        raise ConflictError(
-            "This email address is already registered"
-        ) from None
+        raise ConflictError("This email address is already registered") from None
 
     return {
         "user": UserProfileResponse.model_validate(operator),
         "temporary_password": temporary_password,
         "message": "Operator account created. Share the temporary password securely.",
     }
+
 
 def list_organisation_users(
     db: Session,
@@ -158,10 +157,8 @@ def list_organisation_users(
         .order_by(User.created_at.desc())
     ).all()
 
-    return [
-        UserProfileResponse.model_validate(user)
-        for user in users
-    ]
+    return [UserProfileResponse.model_validate(user) for user in users]
+
 
 def update_user_status(
     db: Session,
@@ -181,6 +178,7 @@ def update_user_status(
 
     if user is None:
         from core.exceptions import NotFoundError
+
         raise NotFoundError("User not found in your organisation")
 
     if user.user_id == current_user.user_id and not data.is_active:

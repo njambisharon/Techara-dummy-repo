@@ -7,11 +7,13 @@ from main import app
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def set_test_jwt_secret(monkeypatch):
     monkeypatch.setenv(
         "JWT_SECRET", "test-only-secret-for-auth-tests-longer-than-32-bytes"
     )
+
 
 def test_get_current_user_profile(db_session, make_user):
     user = make_user()
@@ -19,10 +21,10 @@ def test_get_current_user_profile(db_session, make_user):
     app.dependency_overrides[get_db] = lambda: db_session
     try:
         token = create_access_token(
-    user_id=user.user_id,
-    role=user.role.value,
-    organisation_id=user.organisation_id,
-    )
+            user_id=user.user_id,
+            role=user.role.value,
+            organisation_id=user.organisation_id,
+        )
         response = client.get(
             "/users/me",
             headers={"Authorization": f"Bearer {token}"},
@@ -43,6 +45,7 @@ def test_get_current_user_profile_requires_authentication():
     response = client.get("/users/me")
 
     assert response.status_code == 401
+
 
 def test_update_current_user_profile(db_session, make_user):
     user = make_user()

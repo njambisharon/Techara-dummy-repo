@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from models.enums import UserRole
+
 
 class SignupRequest(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
@@ -7,6 +9,7 @@ class SignupRequest(BaseModel):
     email: EmailStr
     organisation_name: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=8, max_length=128)
+    role: UserRole = UserRole.OPERATOR
 
     @field_validator("first_name", "last_name", "organisation_name")
     @classmethod

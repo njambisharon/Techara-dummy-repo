@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from uuid import UUID
 
@@ -39,6 +38,7 @@ class UserProfileUpdateRequest(BaseModel):
 
         return self
 
+
 class CreateFieldAgentRequest(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
@@ -58,6 +58,7 @@ class CreateFieldAgentResponse(BaseModel):
     user: UserProfileResponse
     temporary_password: str
     message: str
+
 
 class CreateOperatorRequest(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
@@ -82,6 +83,7 @@ class CreateOperatorResponse(BaseModel):
     user: UserProfileResponse
     temporary_password: str
     message: str
+
 
 class UpdateUserStatusRequest(BaseModel):
     is_active: bool

@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -9,8 +8,6 @@ from services.user_service import create_field_agent
 from database import get_db
 from models.user import User
 from schemas.user import (
-    CreateFieldAgentRequest,
-    CreateFieldAgentResponse,
     CreateOperatorRequest,
     CreateOperatorResponse,
     UpdateUserStatusRequest,
@@ -19,7 +16,6 @@ from schemas.user import (
     UserProfileUpdateRequest,
 )
 from services.user_service import (
-    create_field_agent,
     create_operator,
     get_current_user_profile,
     list_organisation_users,
@@ -45,6 +41,7 @@ def update_my_profile(
 ) -> UserProfileResponse:
     return update_current_user_profile(db, current_user, data)
 
+
 @router.post(
     "/field-agents",
     response_model=CreateFieldAgentResponse,
@@ -56,6 +53,7 @@ def create_field_agent_endpoint(
     current_user: User = Depends(require_roles(UserRole.OPERATOR)),
 ) -> CreateFieldAgentResponse:
     return create_field_agent(db, current_user, data)
+
 
 @router.post(
     "/operators",
@@ -69,12 +67,14 @@ def create_operator_endpoint(
 ) -> CreateOperatorResponse:
     return create_operator(db, current_user, data)
 
+
 @router.get("/", response_model=list[UserProfileResponse])
 def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.OPERATOR)),
 ) -> list[UserProfileResponse]:
     return list_organisation_users(db, current_user)
+
 
 @router.patch(
     "/{user_id}/status",
