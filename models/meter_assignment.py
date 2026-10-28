@@ -42,7 +42,6 @@ class MeterAssignment(Base):
             postgresql_where=text("removed_at IS NULL"),
             sqlite_where=text("removed_at IS NULL"),
         ),
-       
     )
 
     assignment_id = Column(
@@ -98,9 +97,9 @@ class MeterAssignment(Base):
     )
 
     readings = relationship(
-    "Reading",
-    back_populates="assignment",
-    foreign_keys="[Reading.assignment_id]",
-    primaryjoin="MeterAssignment.assignment_id == Reading.assignment_id",
-    viewonly=True,
-)
+        "Reading",
+        back_populates="assignment",
+        foreign_keys="[Reading.assignment_id]",
+        primaryjoin="MeterAssignment.assignment_id == Reading.assignment_id",
+        viewonly=True,
+    )

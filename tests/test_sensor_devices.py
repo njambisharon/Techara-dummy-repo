@@ -116,6 +116,8 @@ def test_update_status_unknown_device_returns_404(client, operator):
     )
 
     assert response.status_code == 404
+
+
 def test_list_devices_filters_by_status(client, device_payload, operator):
     device_id = register(client, device_payload).json()["device_id"]
     client.patch(
@@ -152,9 +154,7 @@ def test_list_devices_filters_by_faulty_status(client, device_payload, operator)
 def test_list_devices_is_scoped_to_organisation(client, device_payload, operator):
     register(client, device_payload)
 
-    response = client.get(
-        "/devices", params={"organisation_id": str(uuid.uuid4())}
-    )
+    response = client.get("/devices", params={"organisation_id": str(uuid.uuid4())})
 
     assert response.status_code == 200
     assert response.json() == []

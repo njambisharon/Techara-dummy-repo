@@ -1,15 +1,12 @@
 import uuid
-from typing import Optional
 from database import get_db
 from fastapi import APIRouter, Depends, Query, status
 from models.enums import DeviceStatus
-from models.user import User
 from schemas.sensor_device import (
     SensorDeviceCreate,
     SensorDeviceRead,
     SensorDeviceStatusUpdate,
 )
-from models.user import User
 from services.sensor_device_service import sensor_device_service
 from sqlalchemy.orm import Session
 
@@ -27,7 +24,11 @@ def register_device(
 ):
     return sensor_device_service.register_device(db, data)
 
-@router.get("",response_model=list[SensorDeviceRead],)
+
+@router.get(
+    "",
+    response_model=list[SensorDeviceRead],
+)
 def list_devices(
     organisation_id: uuid.UUID,
     device_status: DeviceStatus | None = Query(
@@ -43,7 +44,9 @@ def list_devices(
     )
 
 
-@router.patch("/{device_id}/status",response_model=SensorDeviceRead,
+@router.patch(
+    "/{device_id}/status",
+    response_model=SensorDeviceRead,
 )
 def update_device_status(
     device_id: uuid.UUID,

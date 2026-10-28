@@ -5,7 +5,6 @@ from repositories.sensor_device_repository import sensor_device_repository
 
 
 class SensorDeviceService:
-
     def register_device(self, db, data):
         if sensor_device_repository.get_by_serial(db, data.device_serial):
             raise HTTPException(

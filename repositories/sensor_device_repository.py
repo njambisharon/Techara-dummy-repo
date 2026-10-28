@@ -20,6 +20,7 @@ class SensorDeviceRepository:
             )
         db.refresh(device)
         return device
+
     def get_by_serial(self, db, device_serial):
         return db.scalar(
             select(SensorDevice).where(SensorDevice.device_serial == device_serial)
