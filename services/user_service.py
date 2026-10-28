@@ -2,13 +2,13 @@ import secrets
 import string
 
 from pwdlib import PasswordHash
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from core.exceptions import ConflictError, ForbiddenError
+from core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from models.enums import UserRole
 from models.user import User
+from repositories.user_repository import user_repository
 from schemas.user import (
     CreateFieldAgentRequest,
     CreateOperatorRequest,
@@ -16,6 +16,9 @@ from schemas.user import (
     UserProfileResponse,
     UserProfileUpdateRequest,
 )
+
+
+password_hasher = PasswordHash.recommended()
 
 
 def get_current_user_profile(current_user: User) -> UserProfileResponse:
@@ -29,49 +32,42 @@ def update_current_user_profile(
 ) -> UserProfileResponse:
     updates = data.model_dump(exclude_unset=True)
 
-    if "email" in updates:
-        duplicate_email = db.scalar(
-            select(User).where(
-                User.email == str(updates["email"]),
-                User.user_id != current_user.user_id,
-            )
-        )
-        if duplicate_email:
+    if "email" in updates and updates["email"] is not None:
+        email = str(updates["email"]).strip().lower()
+        duplicate_email = user_repository.get_by_email(db, email)
+
+        if duplicate_email and duplicate_email.user_id != current_user.user_id:
             raise ConflictError("Email address is already in use")
 
-    if "phone_number" in updates:
-        duplicate_phone = db.scalar(
-            select(User).where(
-                User.phone_number == updates["phone_number"],
-                User.user_id != current_user.user_id,
-            )
-        )
-        if duplicate_phone:
+        updates["email"] = email
+
+    if "phone_number" in updates and updates["phone_number"] is not None:
+        duplicate_phone = user_repository.get_by_phone(db, updates["phone_number"])
+
+        if duplicate_phone and duplicate_phone.user_id != current_user.user_id:
             raise ConflictError("Phone number is already in use")
 
     for field, value in updates.items():
-        if field == "email" and value is not None:
-            value = str(value)
         setattr(current_user, field, value)
 
-    db.commit()
-    db.refresh(current_user)
+    try:
+        user_repository.save(db, current_user)
+    except IntegrityError:
+        db.rollback()
+        raise ConflictError("Email address or phone number is already in use") from None
 
     return UserProfileResponse.model_validate(current_user)
 
 
-password_hasher = PasswordHash.recommended()
-
-
 def create_field_agent(
-    db: Session, current_user: User, data: CreateFieldAgentRequest
+    db: Session,
+    current_user: User,
+    data: CreateFieldAgentRequest,
 ) -> dict:
     if current_user.role != UserRole.OPERATOR:
         raise ForbiddenError("Only mini-grid operators can create field operators")
 
-    existing_phone = db.scalar(
-        select(User).where(User.phone_number == data.phone_number)
-    )
+    existing_phone = user_repository.get_by_phone(db, data.phone_number)
     if existing_phone:
         raise ConflictError("This phone number is already registered")
 
@@ -90,9 +86,7 @@ def create_field_agent(
     )
 
     try:
-        db.add(field_agent)
-        db.commit()
-        db.refresh(field_agent)
+        user_repository.create(db, field_agent)
     except IntegrityError:
         db.rollback()
         raise ConflictError("This phone number is already registered") from None
@@ -100,7 +94,9 @@ def create_field_agent(
     return {
         "user": UserProfileResponse.model_validate(field_agent),
         "temporary_password": temporary_password,
-        "message": "Field operator account created. Share the temporary password securely.",
+        "message": (
+            "Field operator account created. Share the temporary password securely."
+        ),
     }
 
 
@@ -113,8 +109,8 @@ def create_operator(
         raise ForbiddenError("Only mini-grid operators can create operator accounts")
 
     email = str(data.email).strip().lower()
+    existing_user = user_repository.get_by_email(db, email)
 
-    existing_user = db.scalar(select(User).where(User.email.ilike(email)))
     if existing_user:
         raise ConflictError("This email address is already registered")
 
@@ -133,9 +129,7 @@ def create_operator(
     )
 
     try:
-        db.add(operator)
-        db.commit()
-        db.refresh(operator)
+        user_repository.create(db, operator)
     except IntegrityError:
         db.rollback()
         raise ConflictError("This email address is already registered") from None
@@ -143,7 +137,7 @@ def create_operator(
     return {
         "user": UserProfileResponse.model_validate(operator),
         "temporary_password": temporary_password,
-        "message": "Operator account created. Share the temporary password securely.",
+        "message": ("Operator account created. Share the temporary password securely."),
     }
 
 
@@ -151,12 +145,7 @@ def list_organisation_users(
     db: Session,
     current_user: User,
 ) -> list[UserProfileResponse]:
-    users = db.scalars(
-        select(User)
-        .where(User.organisation_id == current_user.organisation_id)
-        .order_by(User.created_at.desc())
-    ).all()
-
+    users = user_repository.list_for_organisation(db, current_user.organisation_id)
     return [UserProfileResponse.model_validate(user) for user in users]
 
 
@@ -169,24 +158,23 @@ def update_user_status(
     if current_user.role != UserRole.OPERATOR:
         raise ForbiddenError("Only mini-grid operators can update user status")
 
-    user = db.scalar(
-        select(User).where(
-            User.user_id == user_id,
-            User.organisation_id == current_user.organisation_id,
-        )
+    user = user_repository.get_by_id_and_organisation(
+        db, user_id, current_user.organisation_id
     )
 
     if user is None:
-        from core.exceptions import NotFoundError
-
         raise NotFoundError("User not found in your organisation")
 
     if user.user_id == current_user.user_id and not data.is_active:
         raise ForbiddenError("You cannot deactivate your own account")
 
     user.is_active = data.is_active
-    db.commit()
-    db.refresh(user)
+
+    try:
+        user_repository.save(db, user)
+    except IntegrityError:
+        db.rollback()
+        raise ConflictError("Could not update user status") from None
 
     status_message = "activated" if user.is_active else "deactivated"
 
