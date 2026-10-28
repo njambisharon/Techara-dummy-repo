@@ -28,9 +28,9 @@ def signup(db: Session, data: SignupRequest) -> SignupResponse:
 
     if auth_repository.get_user_by_email(db, email):
         raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="An account with this email already exists.",
-    )
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists.",
+        )
 
     if auth_repository.get_organisation_by_name(db, organisation_name):
         raise HTTPException(
