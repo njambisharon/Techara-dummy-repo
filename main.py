@@ -3,7 +3,12 @@ from routers import (
     sensor_devices,
 )
 
-app = FastAPI(title="GridFit", version="0.1.0")
+from routers.auth import router as auth_router
+
+app = FastAPI(title="GridFit API")
+
+
+app.include_router(auth_router)
 
 
 app.include_router(sensor_devices.router)
