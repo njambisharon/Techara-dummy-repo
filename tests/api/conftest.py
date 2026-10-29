@@ -55,6 +55,7 @@ def operator(make_user):
 def field_agent(make_user, operator):
     return make_user(org=operator.organisation, role=UserRole.FIELD_AGENT)
 
+
 @pytest.fixture
 def make_scenario_site(db_session, make_site, make_site_profile, operator):
     def factory():
@@ -142,4 +143,3 @@ def saved_scenario(run_scenario, scenario_site, metered_business):
         startup_data_label=StartupDataLabel.USER_ENTERED,
     )
     return run_scenario(scenario_site, [business]).json()
-

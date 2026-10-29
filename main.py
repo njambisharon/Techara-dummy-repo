@@ -18,6 +18,7 @@ from routers.auth import router as auth_router
 app = FastAPI(title="GridFit API")
 register_exception_handlers(app)
 
+
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, exc: AppError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
