@@ -7,7 +7,6 @@ import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
 from core.defaults import SITE_TIMEZONE
 from core.security import create_access_token
 from database import get_db
@@ -15,7 +14,7 @@ from fastapi.testclient import TestClient
 from main import app
 from models.enums import UserRole
 
-from models.enums import StartupDataLabel, UserRole
+from models.enums import StartupDataLabel
 
 SCENARIO_SETTINGS = {
     "reserve_factor": 0.2,
