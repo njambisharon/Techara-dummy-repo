@@ -2,10 +2,9 @@ import uuid
 
 from core.dependencies import require_roles
 from database import get_db
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from models.enums import UserRole
 from models.user import User
-from repositories.meter_assignment_repository import meter_assignment_repository
 from schemas.meter_assignment import (
     MeterAssignmentCreate,
     MeterAssignmentCreated,
@@ -41,7 +40,7 @@ def remove_meter(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(*FIELD_AGENT_ONLY)),
 ):
-    return meter_assignment_service.remove_meter(db, assignment_id, data, current_user)
+    return meter_assignment_service.remove_meter(db, assignment_id, current_user)
 
 
 @router.get("", response_model=list[MeterAssignmentRead])
@@ -63,9 +62,4 @@ def get_meter_assignment(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
-    assignment = meter_assignment_repository.get_for_organisation(
-        db, assignment_id, current_user.organisation_id
-    )
-    if assignment is None:
-        raise HTTPException(status_code=404, detail="Meter assignment not found")
-    return assignment
+    return meter_assignment_service.get_assignment(db, current_user, assignment_id)

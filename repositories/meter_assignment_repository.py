@@ -76,6 +76,7 @@ class MeterAssignmentRepository:
         if open_only:
             query = query.where(MeterAssignment.removed_at.is_(None))
         return db.scalars(query.order_by(MeterAssignment.installed_at.desc())).all()
+    
 
 
 meter_assignment_repository = MeterAssignmentRepository()

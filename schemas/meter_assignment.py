@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -10,7 +11,7 @@ class MeterAssignmentCreate(BaseModel):
 
 
 class MeterAssignmentRemove(BaseModel):
-    buffer_uploaded_confirmed: bool
+    buffer_uploaded_confirmed: Literal[True]
 
 
 class MeterAssignmentRead(BaseModel):
