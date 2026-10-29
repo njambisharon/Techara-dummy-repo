@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from models.enums import BusinessType, ConnectionStatus, StartupDataLabel
 
@@ -18,6 +18,19 @@ class BusinessCreate(BaseModel):
     owner_phone: str | None = Field(default=None, max_length=20)
     operating_hours: dict
     days_per_month: int = Field(ge=1, le=31)
+    startup_power_kw: Decimal | None = Field(default=None, gt=0)
+    startup_duration_s: int | None = Field(default=None, gt=0)
+    startup_data_label: StartupDataLabel | None = None
+
+    @model_validator(mode="after")
+    def validate_startup_data(self):
+        if (self.startup_power_kw is None) != (
+            self.startup_data_label is None
+        ):
+            raise ValueError(
+                "Startup power and startup data label must be provided together"
+            )
+        return self
 
 
 class BusinessRead(BaseModel):
@@ -50,11 +63,15 @@ class BusinessUpdate(BaseModel):
     owner_phone: str | None = Field(default=None, max_length=20)
     operating_hours: dict | None = None
     days_per_month: int | None = Field(default=None, ge=1, le=31)
+    startup_power_kw: Decimal | None = Field(default=None, gt=0)
+    startup_duration_s: int | None = Field(default=None, gt=0)
+    startup_data_label: StartupDataLabel | None = None
 
 
 class HourlyBusinessProfilePoint(BaseModel):
     hour: int = Field(ge=0, le=23)
     average_power_kw: float | None
+    peak_power_kw: float | None
     reading_count: int = Field(ge=0)
 
 

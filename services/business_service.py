@@ -1,6 +1,11 @@
+from collections import defaultdict
+from datetime import timezone
+from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from core.exceptions import NotFoundError
 from models.business import Business
+from models.enums import ConnectionStatus, UserRole
 from repositories.business_repository import business_repository
 from repositories.site_repository import site_repository
 
@@ -26,6 +31,9 @@ class BusinessService:
             owner_phone=data.owner_phone,
             operating_hours=data.operating_hours,
             days_per_month=data.days_per_month,
+            startup_power_kw=data.startup_power_kw,
+            startup_duration_s=data.startup_duration_s,
+            startup_data_label=data.startup_data_label,
         )
 
         return business_repository.create(db, business)
@@ -38,7 +46,9 @@ class BusinessService:
 
     def get_business(self, db, business_id, current_user):
         business = business_repository.get_for_organisation(
-            db, business_id, current_user.organisation_id
+            db,
+            business_id,
+            current_user.organisation_id,
         )
         if business is None:
             raise NotFoundError("Business not found")
@@ -46,36 +56,73 @@ class BusinessService:
 
     def update_business(self, db, business_id, data, current_user):
         business = self.get_business(db, business_id, current_user)
+
+        if current_user.role == UserRole.FIELD_AGENT and (
+            business.logged_by != current_user.user_id
+            or business.connection_status != ConnectionStatus.PROSPECTIVE
+        ):
+            raise NotFoundError("Business not found")
+
         changes = data.model_dump(exclude_unset=True)
+        updated_power = changes.get(
+            "startup_power_kw", business.startup_power_kw
+        )
+        updated_label = changes.get(
+            "startup_data_label", business.startup_data_label
+        )
+
+        if (updated_power is None) != (updated_label is None):
+            from core.exceptions import AppError
+
+            raise AppError(
+                status_code=422,
+                detail="Startup power and startup data label must be provided together",
+            )
 
         for field, value in changes.items():
             setattr(business, field, value)
 
         return business_repository.update(db, business)
 
-
     def get_business_profile(self, db, business_id, current_user):
-        from collections import defaultdict
-        from decimal import Decimal
-
-        # Reuse the organisation-scoped lookup to avoid leaking another
-        # organisation's business or meter data.
         business = self.get_business(db, business_id, current_user)
-        readings = business_repository.readings_for_business(db, business.business_id)
+        readings = business_repository.readings_for_business(
+            db,
+            business.business_id,
+        )
 
+        lusaka = ZoneInfo("Africa/Lusaka")
         power_totals_w = defaultdict(Decimal)
+        power_peaks_w = defaultdict(Decimal)
         reading_counts = defaultdict(int)
 
         for reading in readings:
-            hour = reading.measured_at.hour
-            power_totals_w[hour] += Decimal(str(reading.power_w))
+            measured_at = reading.measured_at
+            if measured_at.tzinfo is None:
+                measured_at = measured_at.replace(tzinfo=timezone.utc)
+            hour = measured_at.astimezone(lusaka).hour
+            power_w = Decimal(str(reading.power_w))
+            power_totals_w[hour] += power_w
+            power_peaks_w[hour] = max(power_peaks_w[hour], power_w)
             reading_counts[hour] += 1
 
         hours = []
         for hour in range(24):
             count = reading_counts[hour]
             average_kw = (
-                round(float(power_totals_w[hour] / count / Decimal("1000")), 3)
+                round(
+                    float(
+                        power_totals_w[hour]
+                        / count
+                        / Decimal("1000")
+                    ),
+                    3,
+                )
+                if count
+                else None
+            )
+            peak_kw = (
+                round(float(power_peaks_w[hour] / Decimal("1000")), 3)
                 if count
                 else None
             )
@@ -83,6 +130,7 @@ class BusinessService:
                 {
                     "hour": hour,
                     "average_power_kw": average_kw,
+                    "peak_power_kw": peak_kw,
                     "reading_count": count,
                 }
             )

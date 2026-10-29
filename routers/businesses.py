@@ -1,11 +1,10 @@
-
 import uuid
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from core.dependencies import require_roles
-from core.roles import OPERATOR_ONLY
+from core.roles import ALL_ROLES
 from database import get_db
 from models.user import User
 from schemas.business import (
@@ -27,7 +26,7 @@ router = APIRouter(prefix="/businesses", tags=["Businesses"])
 def create_business(
     data: BusinessCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return business_service.create_business(db, data, current_user)
 
@@ -38,7 +37,7 @@ def create_business(
 )
 def list_businesses(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return business_service.list_businesses(db, current_user)
 
@@ -50,7 +49,7 @@ def list_businesses(
 def get_business(
     business_id: uuid.UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return business_service.get_business(db, business_id, current_user)
 
@@ -63,17 +62,27 @@ def update_business(
     business_id: uuid.UUID,
     data: BusinessUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return business_service.update_business(
-        db, business_id, data, current_user
+        db,
+        business_id,
+        data,
+        current_user,
     )
 
 
-@router.get("/{business_id}/profile", response_model=BusinessProfileRead)
+@router.get(
+    "/{business_id}/profile",
+    response_model=BusinessProfileRead,
+)
 def get_business_profile(
     business_id: uuid.UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
-    return business_service.get_business_profile(db, business_id, current_user)
+    return business_service.get_business_profile(
+        db,
+        business_id,
+        current_user,
+    )

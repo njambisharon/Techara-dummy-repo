@@ -36,10 +36,12 @@ def test_business_profile_aggregates_readings_by_hour(
     assert len(body["hours"]) == 24
 
     by_hour = {item["hour"]: item for item in body["hours"]}
-    assert by_hour[10]["average_power_kw"] == 2.0
-    assert by_hour[10]["reading_count"] == 2
-    assert by_hour[11]["average_power_kw"] == 0.5
-    assert by_hour[11]["reading_count"] == 1
+    assert by_hour[12]["average_power_kw"] == 2.0
+    assert by_hour[12]["peak_power_kw"] == 3.0
+    assert by_hour[12]["reading_count"] == 2
+    assert by_hour[13]["average_power_kw"] == 0.5
+    assert by_hour[13]["peak_power_kw"] == 0.5
+    assert by_hour[13]["reading_count"] == 1
 
 
 def test_business_profile_returns_empty_hours_as_null(
