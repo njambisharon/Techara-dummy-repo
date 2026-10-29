@@ -39,6 +39,45 @@ class UserProfileUpdateRequest(BaseModel):
         return self
 
 
+class CreateUserRequest(BaseModel):
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    role: UserRole
+    email: EmailStr | None = None
+    phone_number: str | None = Field(default=None, min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def validate_fields(self):
+        self.first_name = self.first_name.strip()
+        self.last_name = self.last_name.strip()
+
+        if not self.first_name:
+            raise ValueError("first_name cannot be empty")
+        if not self.last_name:
+            raise ValueError("last_name cannot be empty")
+
+        if self.role == UserRole.FIELD_AGENT:
+            if not self.phone_number or not self.phone_number.strip():
+                raise ValueError("phone_number is required for field agents")
+            self.phone_number = self.phone_number.strip()
+
+        elif self.role == UserRole.OPERATOR:
+            if not self.email:
+                raise ValueError("email is required for operators")
+            self.email = str(self.email).strip().lower()
+
+        else:
+            raise ValueError("This role cannot be created through this endpoint")
+
+        return self
+
+
+class CreateUserResponse(BaseModel):
+    user: UserProfileResponse
+    temporary_password: str
+    message: str
+
+
 class CreateFieldAgentRequest(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)

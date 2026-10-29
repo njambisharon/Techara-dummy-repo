@@ -12,6 +12,8 @@ from repositories.user_repository import user_repository
 from schemas.user import (
     CreateFieldAgentRequest,
     CreateOperatorRequest,
+    CreateUserRequest,
+    CreateUserResponse,
     UpdateUserStatusRequest,
     UserProfileResponse,
     UserProfileUpdateRequest,
@@ -57,6 +59,35 @@ def update_current_user_profile(
         raise ConflictError("Email address or phone number is already in use") from None
 
     return UserProfileResponse.model_validate(current_user)
+
+
+def create_user(
+    db: Session,
+    current_user: User,
+    data: CreateUserRequest,
+) -> CreateUserResponse:
+    if data.role == UserRole.FIELD_AGENT:
+        result = create_field_agent(
+            db,
+            current_user,
+            CreateFieldAgentRequest(
+                first_name=data.first_name,
+                last_name=data.last_name,
+                phone_number=data.phone_number,
+            ),
+        )
+    else:
+        result = create_operator(
+            db,
+            current_user,
+            CreateOperatorRequest(
+                first_name=data.first_name,
+                last_name=data.last_name,
+                email=data.email,
+            ),
+        )
+
+    return CreateUserResponse.model_validate(result)
 
 
 def create_field_agent(
