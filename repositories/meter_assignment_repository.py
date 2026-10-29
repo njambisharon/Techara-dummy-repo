@@ -1,6 +1,8 @@
+from models.business import Business
 from models.meter_assignment import MeterAssignment
 from models.sensor_device import SensorDevice
 from sqlalchemy import select
+from models.site import Site
 
 
 class MeterAssignmentRepository:
@@ -10,11 +12,34 @@ class MeterAssignmentRepository:
         db.refresh(assignment)
         return assignment
 
+    def save(self, db, assignment):
+        db.commit()
+        db.refresh(assignment)
+        return assignment
+
+    def get_device_for_organisation(self, db, device_id, organisation_id):
+        return db.scalar(
+            select(SensorDevice).where(
+                SensorDevice.device_id == device_id,
+                SensorDevice.organisation_id == organisation_id,
+            )
+        )
+
     def get_open_for_device(self, db, device_id):
         return db.scalar(
             select(MeterAssignment).where(
                 MeterAssignment.device_id == device_id,
                 MeterAssignment.removed_at.is_(None),
+            )
+        )
+
+    def get_business_for_organisation(self, db, business_id, organisation_id):
+        return db.scalar(
+            select(Business)
+            .join(Site, Business.site_id == Site.site_id)
+            .where(
+                Business.business_id == business_id,
+                Site.organisation_id == organisation_id,
             )
         )
 
@@ -35,18 +60,6 @@ class MeterAssignmentRepository:
                 SensorDevice.organisation_id == organisation_id,
             )
         )
-
-    def save(self, db, assignment):
-        db.commit()
-        db.refresh(assignment)
-        return assignment
-
-    def list_for_device(self, db, device_id):
-        return db.scalars(
-            select(MeterAssignment)
-            .where(MeterAssignment.device_id == device_id)
-            .order_by(MeterAssignment.installed_at)
-        ).all()
 
     def list_for_organisation(
         self, db, organisation_id, business_id=None, device_id=None, open_only=False

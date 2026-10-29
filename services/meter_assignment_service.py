@@ -44,7 +44,6 @@ class MeterAssignmentService:
                 "This business already has a meter installed",
             )
 
-        # Fresh token per install; only its SHA-256 hash is stored.
         token = generate_device_token()
         assignment = MeterAssignment(
             device_id=device.device_id,
@@ -55,7 +54,6 @@ class MeterAssignmentService:
         try:
             assignment = meter_assignment_repository.create(db, assignment)
         except IntegrityError:
-            # A concurrent install won the race; the unique index caught it.
             db.rollback()
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
