@@ -4,6 +4,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from core.exceptions import NotFoundError
+from engine.profiles import build_hourly_profile
 from models.business import Business
 from models.enums import ConnectionStatus, UserRole
 from repositories.business_repository import business_repository
@@ -79,6 +80,55 @@ class BusinessService:
             setattr(business, field, value)
 
         return business_repository.update(db, business)
+
+    def build_profile(self, db, business, min_days):
+        readings = business_repository.readings_for_business(
+            db,
+            business.business_id,
+        )
+
+        lusaka = ZoneInfo("Africa/Lusaka")
+        reading_data = []
+
+        for reading in readings:
+            measured_at = reading.measured_at
+            if measured_at.tzinfo is None:
+                measured_at = measured_at.replace(tzinfo=lusaka)
+
+            reading_data.append(
+                (
+                    measured_at,
+                    float(reading.power_w),
+                    float(reading.energy_total_kwh),
+                )
+            )
+
+        profile = build_hourly_profile(
+            reading_data,
+            business.operating_hours,
+            lusaka,
+        )
+
+        observed_days = profile["observed_days"]
+
+        return {
+            **profile,
+            "business_id": business.business_id,
+            "operating_hours": business.operating_hours,
+            "days_per_month": business.days_per_month,
+            "startup_power_kw": (
+                None
+                if business.startup_power_kw is None
+                else float(business.startup_power_kw)
+            ),
+            "startup_duration_s": business.startup_duration_s,
+            "startup_data_label": (
+                getattr(business.startup_data_label, "value", business.startup_data_label)
+                if business.startup_data_label is not None
+                else None
+            ),
+            "is_observed": observed_days >= min_days,
+        }
 
     def get_business_profile(self, db, business_id, current_user):
         business = self.get_business(db, business_id, current_user)
