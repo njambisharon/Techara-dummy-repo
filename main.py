@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from core.exception_handlers import register_exception_handlers
-
+from fastapi.middleware.cors import CORSMiddleware
 from routers import sensor_devices
 from routers.auth import router as auth_router
 from routers.users import router as users_router
