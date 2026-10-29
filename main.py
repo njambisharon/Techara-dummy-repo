@@ -4,8 +4,10 @@ from core.handlers import register_exception_handlers
 from routers import (
     sensor_devices,
     site_profiles,
+    sites,
 )
 from routers.auth import router as auth_router
+
 
 app = FastAPI(title="GridFit API")
 register_exception_handlers(app)
@@ -13,6 +15,7 @@ register_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(sensor_devices.router)
 app.include_router(site_profiles.router)
+app.include_router(sites.router)
 
 
 @app.get("/health")
