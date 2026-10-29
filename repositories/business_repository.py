@@ -1,4 +1,3 @@
-
 from models.business import Business
 from models.site import Site
 from sqlalchemy import select
@@ -35,7 +34,6 @@ class BusinessRepository:
         db.commit()
         db.refresh(business)
         return business
-
 
     def readings_for_business(self, db, business_id):
         from models.reading import Reading

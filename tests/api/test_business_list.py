@@ -1,4 +1,3 @@
-
 def test_operator_can_list_businesses_in_own_organisation(
     client, operator, auth_headers, make_site, make_business
 ):

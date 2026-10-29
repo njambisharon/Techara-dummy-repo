@@ -3,7 +3,13 @@ from decimal import Decimal
 
 
 def test_business_profile_aggregates_readings_by_hour(
-    client, operator, auth_headers, make_site, make_business, make_assignment, make_reading
+    client,
+    operator,
+    auth_headers,
+    make_site,
+    make_business,
+    make_assignment,
+    make_reading,
 ):
     site = make_site(org=operator.organisation, creator=operator)
     business = make_business(site=site, logger=operator)
@@ -63,7 +69,13 @@ def test_business_profile_returns_empty_hours_as_null(
 
 
 def test_business_profile_hides_other_organisation_business(
-    client, operator, auth_headers, make_site, make_business, make_assignment, make_reading
+    client,
+    operator,
+    auth_headers,
+    make_site,
+    make_business,
+    make_assignment,
+    make_reading,
 ):
     other_site = make_site()
     business = make_business(site=other_site)

@@ -37,9 +37,7 @@ def test_get_business_hides_business_from_other_organisation(
     assert response.status_code == 404
 
 
-def test_get_business_returns_404_for_unknown_id(
-    client, operator, auth_headers
-):
+def test_get_business_returns_404_for_unknown_id(client, operator, auth_headers):
     response = client.get(
         f"/businesses/{uuid.uuid4()}",
         headers=auth_headers(operator),

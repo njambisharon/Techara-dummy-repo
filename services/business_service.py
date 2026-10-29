@@ -64,12 +64,8 @@ class BusinessService:
             raise NotFoundError("Business not found")
 
         changes = data.model_dump(exclude_unset=True)
-        updated_power = changes.get(
-            "startup_power_kw", business.startup_power_kw
-        )
-        updated_label = changes.get(
-            "startup_data_label", business.startup_data_label
-        )
+        updated_power = changes.get("startup_power_kw", business.startup_power_kw)
+        updated_label = changes.get("startup_data_label", business.startup_data_label)
 
         if (updated_power is None) != (updated_label is None):
             from core.exceptions import AppError
@@ -111,11 +107,7 @@ class BusinessService:
             count = reading_counts[hour]
             average_kw = (
                 round(
-                    float(
-                        power_totals_w[hour]
-                        / count
-                        / Decimal("1000")
-                    ),
+                    float(power_totals_w[hour] / count / Decimal("1000")),
                     3,
                 )
                 if count

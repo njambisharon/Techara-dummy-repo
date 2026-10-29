@@ -1,4 +1,3 @@
-
 import os
 import uuid
 from datetime import datetime, timezone
@@ -17,14 +16,14 @@ if not DATABASE_URL:
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 if DATABASE_URL.startswith("sqlite"):
+
     @event.listens_for(engine, "connect")
     def _sqlite_setup(dbapi_conn, _):
-        dbapi_conn.create_function(
-            "gen_random_uuid", 0, lambda: uuid.uuid4().hex
-        )
+        dbapi_conn.create_function("gen_random_uuid", 0, lambda: uuid.uuid4().hex)
         dbapi_conn.create_function(
             "now", 0, lambda: datetime.now(timezone.utc).isoformat()
         )
+
 
 SessionLocal = sessionmaker(
     bind=engine,

@@ -24,9 +24,7 @@ class BusinessCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_startup_data(self):
-        if (self.startup_power_kw is None) != (
-            self.startup_data_label is None
-        ):
+        if (self.startup_power_kw is None) != (self.startup_data_label is None):
             raise ValueError(
                 "Startup power and startup data label must be provided together"
             )
