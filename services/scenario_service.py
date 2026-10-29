@@ -17,7 +17,7 @@ def enum_value(value):
 
 class ScenarioService:
     def get_profile(self, db, profile_id, current_user):
-        profile = site_profile_repository.get_for_organisation(
+        profile = scenario_repository.profile_for_organisation(
             db, profile_id, current_user.organisation_id
         )
         if profile is None:

@@ -11,7 +11,7 @@ from core.security import create_access_token
 from database import get_db
 from fastapi.testclient import TestClient
 from main import app
-from models.enums import UserRole
+from models.enums import StartupDataLabel, UserRole
 
 SCENARIO_SETTINGS = {
     "reserve_factor": 0.2,
@@ -137,5 +137,6 @@ def saved_scenario(run_scenario, scenario_site, metered_business):
         scenario_site.site,
         startup_power_kw=Decimal("5.00"),
         startup_duration_s=3,
+        startup_data_label=StartupDataLabel.USER_ENTERED,
     )
     return run_scenario(scenario_site, [business]).json()

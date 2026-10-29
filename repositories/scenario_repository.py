@@ -32,6 +32,16 @@ class ScenarioRepository:
             .where(Site.organisation_id == organisation_id)
         )
 
+    def profile_for_organisation(self, db, profile_id, organisation_id):
+        return db.scalar(
+            select(SiteProfile)
+            .join(Site, SiteProfile.site_id == Site.site_id)
+            .where(
+                SiteProfile.profile_id == profile_id,
+                Site.organisation_id == organisation_id,
+            )
+        )
+
     def businesses_for_organisation(self, db, business_ids, organisation_id):
         return db.scalars(
             select(Business)

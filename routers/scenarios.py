@@ -1,9 +1,9 @@
 import uuid
 from typing import Literal
 
+from core.dependencies import require_roles
 from core.roles import OPERATOR_ONLY
 from database import get_db
-from dependencies import require_roles
 from fastapi import APIRouter, Depends, Query, status
 from models.user import User
 from schemas.scenario import (
