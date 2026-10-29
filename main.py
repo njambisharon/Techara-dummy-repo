@@ -2,10 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from core.exceptions import AppError
-from routers import (
-    scenarios,
-    sensor_devices,
-)
+from routers import scenarios, sensor_devices, meter_assignments
 
 from routers.auth import router as auth_router
 
@@ -19,7 +16,7 @@ async def app_error_handler(request: Request, exc: AppError):
 
 app.include_router(auth_router)
 
-
+app.include_router(meter_assignments.router)
 app.include_router(sensor_devices.router)
 app.include_router(scenarios.router)
 
