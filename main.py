@@ -2,10 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from core.exceptions import AppError
-from routers import (
-    scenarios,
-    sensor_devices,meter_assignments
-)
+from routers import scenarios, sensor_devices, meter_assignments
 
 from routers.auth import router as auth_router
 
