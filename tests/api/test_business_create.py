@@ -148,8 +148,6 @@ def test_duplicate_business_creation_returns_409(
     assert "Mpanta Maize Mill" in second_response.json()["detail"]
 
     businesses = (
-        db_session.query(Business)
-        .filter(Business.site_id == site.site_id)
-        .all()
+        db_session.query(Business).filter(Business.site_id == site.site_id).all()
     )
     assert len(businesses) == 1
