@@ -123,7 +123,9 @@ class BusinessService:
             ),
             "startup_duration_s": business.startup_duration_s,
             "startup_data_label": (
-                getattr(business.startup_data_label, "value", business.startup_data_label)
+                getattr(
+                    business.startup_data_label, "value", business.startup_data_label
+                )
                 if business.startup_data_label is not None
                 else None
             ),
