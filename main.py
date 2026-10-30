@@ -9,7 +9,6 @@ from routers import (
     sensor_devices,
     site_profiles,
     sites,
-    
 )
 from routers.auth import router as auth_router
 
@@ -29,4 +28,3 @@ app.include_router(readings.router)
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
-
