@@ -8,6 +8,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Uuid,
+    UniqueConstraint,
     func,
     text,
 )
@@ -30,6 +31,7 @@ class Business(Base):
     __tablename__ = "business"
 
     __table_args__ = (
+        UniqueConstraint("site_id", "business_name", name="uq_business_site_name"),
         CheckConstraint(
             "days_per_month BETWEEN 1 AND 31",
             name="ck_business_days_per_month",
