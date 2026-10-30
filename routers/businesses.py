@@ -7,13 +7,13 @@ from core.dependencies import require_roles
 from core.roles import ALL_ROLES
 from database import get_db
 from models.user import User
-from schemas.business import (
+from schemas.businesses import (
     BusinessCreate,
     BusinessProfileRead,
     BusinessRead,
     BusinessUpdate,
 )
-from services.business_service import business_service
+from services.businesses import business_service
 
 router = APIRouter(prefix="/businesses", tags=["Businesses"])
 

@@ -7,7 +7,7 @@ from core.exceptions import NotFoundError
 from engine.profiles import build_hourly_profile
 from models.business import Business
 from models.enums import ConnectionStatus, UserRole
-from repositories.business_repository import business_repository
+from repositories.businesses import business_repository
 from repositories.site_repository import site_repository
 
 
