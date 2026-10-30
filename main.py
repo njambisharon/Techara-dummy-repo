@@ -1,12 +1,17 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from core.exceptions import AppError
-from routers import scenarios, sensor_devices, meter_assignments
-
-from core.exception_handlers import register_exception_handlers
 from core.config import get_settings
-from fastapi.middleware.cors import CORSMiddleware
+from core.exceptions import AppError
+from core.handlers import register_exception_handlers
+from routers import (
+    meter_assignments,
+    scenarios,
+    sensor_devices,
+    site_profiles,
+    sites,
+)
 from routers.auth import router as auth_router
 from routers.users import router as users_router
 
@@ -20,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 register_exception_handlers(app)
 
 
@@ -30,8 +36,10 @@ async def app_error_handler(request: Request, exc: AppError):
 
 app.include_router(auth_router)
 app.include_router(users_router)
-app.include_router(meter_assignments.router)
 app.include_router(sensor_devices.router)
+app.include_router(site_profiles.router)
+app.include_router(sites.router)
+app.include_router(meter_assignments.router)
 app.include_router(scenarios.router)
 
 
