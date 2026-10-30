@@ -3,9 +3,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
-import os
 
-os.environ.setdefault("TEST_DATABASE_URL", os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:"))
+
+os.environ.setdefault(
+    "TEST_DATABASE_URL", os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+)
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 
