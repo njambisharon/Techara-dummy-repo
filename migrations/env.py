@@ -29,6 +29,9 @@ target_metadata = Base.metadata
 
 def get_database_url():
     url = os.getenv("DATABASE_URL")
+    if url and url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+
     if not url:
         raise RuntimeError(
             "DATABASE_URL must be set before running Alembic migrations."
