@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from routers import (
     sensor_devices,
+    readings,
 )
 
 from routers.auth import router as auth_router
@@ -9,9 +10,8 @@ app = FastAPI(title="GridFit API")
 
 
 app.include_router(auth_router)
-
-
 app.include_router(sensor_devices.router)
+app.include_router(readings.router)
 
 
 @app.get("/health")
