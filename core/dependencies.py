@@ -33,6 +33,10 @@ def get_current_user(
         ) from None
 
     user = db.get(User, user_id)
+    print(
+        f"AUTH DIAGNOSTIC: user_id_found={user is not None}, "
+        f"active={getattr(user, 'is_active', None)}"
+    )
 
     if user is None or not user.is_active:
         raise HTTPException(

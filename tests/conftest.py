@@ -7,6 +7,11 @@ from uuid import uuid4
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 
+from fastapi.testclient import TestClient
+
+from database import get_db
+from main import app
+
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -76,6 +81,39 @@ def db_session(engine):
         if transaction.is_active:
             transaction.rollback()
         connection.close()
+
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def operator(make_user):
+    return make_user()
+
+
+@pytest.fixture
+def auth_headers():
+    from core.security import create_access_token
+
+    def factory(user):
+        token = create_access_token(
+            user_id=user.user_id,
+            role=user.role.value,
+            organisation_id=user.organisation_id,
+        )
+        return {"Authorization": f"Bearer {token}"}
+
+    return factory
 
 
 @pytest.fixture
