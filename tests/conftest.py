@@ -4,12 +4,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
-
-os.environ.setdefault(
-    "TEST_DATABASE_URL", os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-)
 os.environ["DATABASE_URL"] = "sqlite://"
-os.environ.setdefault("DATABASE_URL", "sqlite://")
 
 from fastapi.testclient import TestClient
 
@@ -46,10 +41,7 @@ from models.user import User
 
 @pytest.fixture(scope="session")
 def engine():
-    """
-    Session-scoped SQLite engine for all tests.
-    Works in CI without Docker or external Postgres.
-    """
+    """Session-scoped SQLite engine. Creates the schema once and drops it at the end."""
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -72,7 +64,7 @@ def engine():
 
 @pytest.fixture
 def db_session(engine):
-    """Transaction-scoped session that rolls back after each test."""
+    """Session wrapped in a transaction that rolls back after each test."""
     connection = engine.connect()
     transaction = connection.begin()
     Session = sessionmaker(bind=connection, expire_on_commit=False)
