@@ -1,5 +1,4 @@
 .venv/
-uv.lock
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -14,3 +13,10 @@ htmlcov/
 *.sqlite
 *.sqlite3
 .DS_Store
+.github/.env
+.vscode/
+get-pip.py
+__pycache__/
+.pytest_cache/
+.coverage
+env/
