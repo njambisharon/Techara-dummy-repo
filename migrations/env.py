@@ -5,6 +5,7 @@ from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
+from core.database_url import normalize_database_url
 from models.base import Base
 import models.user
 import models.business
@@ -28,9 +29,7 @@ target_metadata = Base.metadata
 
 
 def get_database_url():
-    url = os.getenv("DATABASE_URL")
-    if url and url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+    url = normalize_database_url(os.getenv("DATABASE_URL"))
 
     if not url:
         raise RuntimeError(
