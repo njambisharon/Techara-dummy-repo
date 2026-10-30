@@ -4,6 +4,13 @@ from sqlalchemy import select
 
 
 class BusinessRepository:
+    def get_by_name(self, db, site_id, business_name):
+        query = select(Business).where(
+            Business.site_id == site_id,
+            Business.business_name == business_name,
+        )
+        return db.scalar(query)
+
     def create(self, db, business):
         db.add(business)
         db.commit()

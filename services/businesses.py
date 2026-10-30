@@ -3,7 +3,9 @@ from datetime import timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from core.exceptions import NotFoundError
+from sqlalchemy.exc import IntegrityError
+
+from core.exceptions import ConflictError, NotFoundError
 from engine.profiles import build_hourly_profile
 from models.business import Business
 from models.enums import ConnectionStatus, UserRole
@@ -22,6 +24,11 @@ class BusinessService:
         if site is None:
             raise NotFoundError("Site not found")
 
+        if business_repository.get_by_name(db, site.site_id, data.business_name):
+            raise ConflictError(
+                f"Business '{data.business_name}' already exists at this site."
+            )
+
         business = Business(
             site_id=site.site_id,
             logged_by=current_user.user_id,
@@ -37,7 +44,18 @@ class BusinessService:
             startup_data_label=data.startup_data_label,
         )
 
-        return business_repository.create(db, business)
+        try:
+            return business_repository.create(db, business)
+        except IntegrityError:
+            db.rollback()
+            existing = business_repository.get_by_name(
+                db, data.site_id, data.business_name
+            )
+            if existing:
+                raise ConflictError(
+                    f"Business '{data.business_name}' already exists at this site."
+                )
+            raise
 
     def list_businesses(self, db, current_user):
         return business_repository.list_for_organisation(

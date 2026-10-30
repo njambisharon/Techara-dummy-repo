@@ -118,3 +118,38 @@ def test_business_create_rejects_invalid_days_per_month(
     )
 
     assert response.status_code == 422
+
+
+def test_duplicate_business_creation_returns_409(
+    client, db_session, operator, auth_headers, make_site
+):
+    site = make_site(org=operator.organisation, creator=operator)
+
+    payload = {
+        "site_id": str(site.site_id),
+        "business_name": "Mpanta Maize Mill",
+        "business_type": BusinessType.MAIZE_MILL.value,
+        "owner_first_name": "John",
+        "owner_last_name": "Banda",
+        "owner_phone": "+260977123456",
+        "operating_hours": {"start": "08:00", "end": "17:00"},
+        "days_per_month": 25,
+    }
+
+    first_response = client.post(
+        "/businesses", json=payload, headers=auth_headers(operator)
+    )
+    second_response = client.post(
+        "/businesses", json=payload, headers=auth_headers(operator)
+    )
+
+    assert first_response.status_code == 201
+    assert second_response.status_code == 409
+    assert "Mpanta Maize Mill" in second_response.json()["detail"]
+
+    businesses = (
+        db_session.query(Business)
+        .filter(Business.site_id == site.site_id)
+        .all()
+    )
+    assert len(businesses) == 1
