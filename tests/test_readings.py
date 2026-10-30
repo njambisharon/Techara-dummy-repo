@@ -19,7 +19,7 @@ from services.reading_service import reading_service
 
 SEEDED_ASSIGNMENT = "4c082973-3119-4af2-86c1-2ec87b8418f8"
 UNKNOWN_ASSIGNMENT = "00000000-0000-0000-0000-000000000000"
-DB_URL = os.getenv("TEST_DATABASE_URL")
+DB_URL = os.getenv("TEST_DATABASE_URL") or os.getenv("DATABASE_URL")
 needs_db = pytest.mark.skipif(
     not DB_URL, reason="set TEST_DATABASE_URL to run database tests"
 )
