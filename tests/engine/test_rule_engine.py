@@ -198,3 +198,24 @@ def test_profile_ignores_closed_days():
     )
     assert profile["average_kw"][9] == 2.0
     assert profile["observed_days"] == 2
+
+
+def test_profile_converts_utc_readings_to_lusaka_hour():
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+
+    lusaka = ZoneInfo("Africa/Lusaka")
+
+    # 07:00 UTC is 09:00 in Lusaka.
+    measured_at = datetime(2026, 10, 19, 7, 0, tzinfo=timezone.utc)
+
+    profile = build_hourly_profile(
+        [(measured_at, 2000.0, 1.0)],
+        {"monday": {"open": 8, "close": 17}},
+        lusaka,
+    )
+
+    assert profile["average_kw"][9] == 2.0
+    assert profile["peak_kw"][9] == 2.0
+    assert profile["average_kw"][7] == 0.0
+    assert profile["observed_days"] == 1

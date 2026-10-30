@@ -7,7 +7,7 @@ from models.enums import DataLabel, LimitingCheck, Outcome, RevenueBasis, SolarD
 from models.scenario import Scenario
 from repositories.scenario_repository import scenario_repository
 from repositories.site_profile_repository import site_profile_repository
-from services.business_service import business_service
+from services.businesses import business_service
 from services.site_profile_service import to_engine_site
 
 
