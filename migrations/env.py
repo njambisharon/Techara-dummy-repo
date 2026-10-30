@@ -5,6 +5,7 @@ from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
+from core.database_url import normalize_database_url
 from models.base import Base
 import models.user
 import models.business
@@ -28,7 +29,8 @@ target_metadata = Base.metadata
 
 
 def get_database_url():
-    url = os.getenv("DATABASE_URL")
+    url = normalize_database_url(os.getenv("DATABASE_URL"))
+
     if not url:
         raise RuntimeError(
             "DATABASE_URL must be set before running Alembic migrations."
