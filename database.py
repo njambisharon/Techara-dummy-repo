@@ -2,13 +2,15 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+from core.database_url import normalize_database_url
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = normalize_database_url(os.getenv("DATABASE_URL"))
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set.")
