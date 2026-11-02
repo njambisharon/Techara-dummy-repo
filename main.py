@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from core.config import get_settings
 from core.handlers import register_exception_handlers
 from routers import (
     businesses,
@@ -10,17 +12,29 @@ from routers import (
     sites,
 )
 from routers.auth import router as auth_router
+from routers.users import router as users_router
 
 app = FastAPI(title="GridFit API")
+settings = get_settings()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 register_exception_handlers(app)
 
 app.include_router(auth_router)
-app.include_router(meter_assignments.router)
+app.include_router(users_router)
 app.include_router(sensor_devices.router)
+app.include_router(site_profiles.router)
+app.include_router(sites.router)
+app.include_router(meter_assignments.router)
 app.include_router(scenarios.router)
 app.include_router(businesses.router)
-app.include_router(sites.router)
-app.include_router(site_profiles.router)
 
 
 @app.get("/health")
