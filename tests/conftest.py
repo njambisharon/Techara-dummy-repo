@@ -4,6 +4,10 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+os.environ.setdefault(
+    "CORS_ALLOW_ORIGINS",
+    '["http://localhost:3000","http://127.0.0.1:3000"]',
+)
 os.environ["DATABASE_URL"] = "sqlite://"
 
 from fastapi.testclient import TestClient
