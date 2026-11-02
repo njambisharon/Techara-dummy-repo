@@ -5,7 +5,12 @@ from pwdlib import PasswordHash
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from core.exceptions import ConflictError, ForbiddenError, NotFoundError
+from core.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    InvalidDataError,
+    NotFoundError,
+)
 from models.enums import UserRole
 from models.user import User
 from repositories.user_repository import user_repository
@@ -32,8 +37,15 @@ def update_current_user_profile(
     current_user: User,
     data: UserProfileUpdateRequest,
 ) -> UserProfileResponse:
-    updates = data.model_dump(exclude_unset=True)
 
+    if not data.model_fields_set:
+        raise InvalidDataError("Provide at least one field to update")
+
+    for field in data.model_fields_set:
+        if getattr(data, field) is None:
+            raise InvalidDataError(f"{field} cannot be null")
+
+    updates = data.model_dump(exclude_unset=True)
     if "email" in updates and updates["email"] is not None:
         email = str(updates["email"]).strip().lower()
         duplicate_email = user_repository.get_by_email(db, email)
@@ -66,26 +78,47 @@ def create_user(
     current_user: User,
     data: CreateUserRequest,
 ) -> CreateUserResponse:
+    first_name = data.first_name.strip()
+    last_name = data.last_name.strip()
+
+    if not first_name:
+        raise InvalidDataError("first_name cannot be empty")
+
+    if not last_name:
+        raise InvalidDataError("last_name cannot be empty")
+
     if data.role == UserRole.FIELD_AGENT:
+        phone_number = data.phone_number.strip() if data.phone_number else ""
+
+        if not phone_number:
+            raise InvalidDataError("Phone number is required for field agents")
+
         result = create_field_agent(
             db,
             current_user,
             CreateFieldAgentRequest(
-                first_name=data.first_name,
-                last_name=data.last_name,
-                phone_number=data.phone_number,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone_number,
             ),
         )
-    else:
+
+    elif data.role == UserRole.OPERATOR:
+        if not data.email:
+            raise InvalidDataError("Email is required for operators")
+
         result = create_operator(
             db,
             current_user,
             CreateOperatorRequest(
-                first_name=data.first_name,
-                last_name=data.last_name,
-                email=data.email,
+                first_name=first_name,
+                last_name=last_name,
+                email=str(data.email).strip().lower(),
             ),
         )
+
+    else:
+        raise InvalidDataError("This role cannot be created through this endpoint")
 
     return CreateUserResponse.model_validate(result)
 
@@ -98,7 +131,20 @@ def create_field_agent(
     if current_user.role != UserRole.OPERATOR:
         raise ForbiddenError("Only mini-grid operators can create field operators")
 
-    existing_phone = user_repository.get_by_phone(db, data.phone_number)
+    first_name = data.first_name.strip()
+    last_name = data.last_name.strip()
+    phone_number = data.phone_number.strip()
+
+    if not first_name:
+        raise InvalidDataError("first_name cannot be empty")
+
+    if not last_name:
+        raise InvalidDataError("last_name cannot be empty")
+
+    if not phone_number:
+        raise InvalidDataError("phone_number cannot be empty")
+
+    existing_phone = user_repository.get_by_phone(db, phone_number)
     if existing_phone:
         raise ConflictError("This phone number is already registered")
 
@@ -107,9 +153,9 @@ def create_field_agent(
 
     field_agent = User(
         organisation_id=current_user.organisation_id,
-        first_name=data.first_name,
-        last_name=data.last_name,
-        phone_number=data.phone_number,
+        first_name=first_name,
+        last_name=last_name,
+        phone_number=phone_number,
         password_hash=password_hasher.hash(temporary_password),
         role=UserRole.FIELD_AGENT,
         must_change_password=True,
@@ -139,7 +185,16 @@ def create_operator(
     if current_user.role != UserRole.OPERATOR:
         raise ForbiddenError("Only mini-grid operators can create operator accounts")
 
+    first_name = data.first_name.strip()
+    last_name = data.last_name.strip()
     email = str(data.email).strip().lower()
+
+    if not first_name:
+        raise InvalidDataError("first_name cannot be empty")
+
+    if not last_name:
+        raise InvalidDataError("last_name cannot be empty")
+
     existing_user = user_repository.get_by_email(db, email)
 
     if existing_user:
@@ -150,8 +205,8 @@ def create_operator(
 
     operator = User(
         organisation_id=current_user.organisation_id,
-        first_name=data.first_name,
-        last_name=data.last_name,
+        first_name=first_name,
+        last_name=last_name,
         email=email,
         password_hash=password_hasher.hash(temporary_password),
         role=UserRole.OPERATOR,
