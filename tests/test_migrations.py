@@ -13,14 +13,17 @@ def test_migration_chain_is_valid():
 
     initial = script.get_revision("e23588f3a510")
     application = script.get_revision("76f9e71a6602")
+    restoration = script.get_revision("217e6c5990a5")
     latest = script.get_revision("939c36146b33")
 
     assert initial is not None
     assert application is not None
+    assert restoration is not None
     assert latest is not None
 
     assert application.down_revision == initial.revision
-    assert latest.down_revision == application.revision
+    assert restoration.down_revision == application.revision
+    assert latest.down_revision == restoration.revision
     assert script.get_current_head() == latest.revision
 
 
