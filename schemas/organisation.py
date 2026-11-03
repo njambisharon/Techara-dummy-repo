@@ -10,3 +10,7 @@ class OrganisationResponse(BaseModel):
     organisation_id: UUID
     organisation_name: str = Field(max_length=100)
     created_at: datetime
+
+
+class OrganisationUpdate(BaseModel):
+    organisation_name: str = Field(min_length=1, max_length=100)
