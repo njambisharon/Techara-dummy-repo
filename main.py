@@ -4,9 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import get_settings
 from core.handlers import register_exception_handlers
 from routers import (
-    readings,
     businesses,
     meter_assignments,
+    readings,
     scenarios,
     sensor_devices,
     site_profiles,
@@ -31,6 +31,7 @@ register_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(sensor_devices.router)
+app.include_router(readings.router)
 app.include_router(site_profiles.router)
 app.include_router(sites.router)
 app.include_router(meter_assignments.router)
