@@ -2,7 +2,15 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
+
+
+class ReadingCreate(BaseModel):
+    measured_at: datetime | None = None
+    voltage_v: Decimal
+    current_a: Decimal
+    power_w: Decimal
+    energy_total_kwh: Decimal = Field(ge=0)
 
 
 class ReadingOut(BaseModel):

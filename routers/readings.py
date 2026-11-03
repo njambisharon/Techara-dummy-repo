@@ -1,10 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from database import get_db
-from schemas.reading import ReadingOut
+from schemas.reading import ReadingCreate, ReadingOut
 from services.reading_service import reading_service
 
 router = APIRouter(tags=["Readings"])
@@ -22,3 +22,16 @@ def recent_readings(
     db: Session = Depends(get_db),
 ):
     return reading_service.list_recent(db, assignment_id, limit)
+
+
+@router.post(
+    "/assignments/{assignment_id}/readings",
+    response_model=ReadingOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_reading(
+    assignment_id: uuid.UUID,
+    payload: ReadingCreate,
+    db: Session = Depends(get_db),
+):
+    return reading_service.create(db, assignment_id, payload)

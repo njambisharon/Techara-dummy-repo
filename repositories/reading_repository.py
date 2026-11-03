@@ -27,5 +27,12 @@ class ReadingRepository:
             .limit(limit)
         ).all()
 
+    def create(self, db: Session, assignment_id: uuid.UUID, data: dict) -> Reading:
+        reading = Reading(assignment_id=assignment_id, **data)
+        db.add(reading)
+        db.commit()
+        db.refresh(reading)
+        return reading
+
 
 reading_repository = ReadingRepository()
