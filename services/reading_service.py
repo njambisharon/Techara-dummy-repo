@@ -42,5 +42,16 @@ class ReadingService:
 
         return reading_repository.create(db, assignment_id, data)
 
+    def delete(self, db: Session, assignment_id: uuid.UUID, reading_id: int) -> None:
+        assignment = meter_assignment_repository.get(db, assignment_id)
+        if assignment is None:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+
+        reading = reading_repository.get_for_assignment(db, assignment_id, reading_id)
+        if reading is None:
+            raise HTTPException(status_code=404, detail="Reading not found")
+
+        reading_repository.delete(db, reading)
+
 
 reading_service = ReadingService()

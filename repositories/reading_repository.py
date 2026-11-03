@@ -42,5 +42,17 @@ class ReadingRepository:
             )
         )
 
+    def get_for_assignment(self, db, assignment_id, reading_id):
+        return db.scalar(
+            select(Reading).where(
+                Reading.assignment_id == assignment_id,
+                Reading.reading_id == reading_id,
+            )
+        )
+
+    def delete(self, db, reading: Reading) -> None:
+        db.delete(reading)
+        db.commit()
+
 
 reading_repository = ReadingRepository()

@@ -35,3 +35,15 @@ def create_reading(
     db: Session = Depends(get_db),
 ):
     return reading_service.create(db, assignment_id, payload)
+
+
+@router.delete(
+    "/assignments/{assignment_id}/readings/{reading_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_reading(
+    assignment_id: uuid.UUID,
+    reading_id: int,
+    db: Session = Depends(get_db),
+):
+    reading_service.delete(db, assignment_id, reading_id)
