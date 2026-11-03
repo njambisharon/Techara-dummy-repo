@@ -34,5 +34,13 @@ class ReadingRepository:
         db.refresh(reading)
         return reading
 
+    def get_by_measured_at(self, db, assignment_id, measured_at):
+        return db.scalar(
+            select(Reading).where(
+                Reading.assignment_id == assignment_id,
+                Reading.measured_at == measured_at,
+            )
+        )
+
 
 reading_repository = ReadingRepository()

@@ -29,6 +29,17 @@ class ReadingService:
         if data.get("measured_at") is None:
             data["measured_at"] = now
 
+        existing = reading_repository.get_by_measured_at(
+            db, assignment_id, data["measured_at"]
+        )
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="A reading already exists for this assignment at this time",
+            )
+
+        data["business_id"] = assignment.business_id
+
         return reading_repository.create(db, assignment_id, data)
 
 
