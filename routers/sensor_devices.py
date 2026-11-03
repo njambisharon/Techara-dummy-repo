@@ -9,6 +9,7 @@ from schemas.sensor_device import (
 )
 from services.sensor_device_service import sensor_device_service
 from sqlalchemy.orm import Session
+from typing import Optional
 
 router = APIRouter(prefix="/devices", tags=["Sensor devices"])
 
@@ -31,7 +32,7 @@ def register_device(
 )
 def list_devices(
     organisation_id: uuid.UUID,
-    device_status: DeviceStatus | None = Query(
+    device_status: Optional[DeviceStatus] = Query(
         default=None,
         alias="status",
     ),

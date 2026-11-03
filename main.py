@@ -6,6 +6,7 @@ from core.handlers import register_exception_handlers
 from routers import (
     businesses,
     meter_assignments,
+    readings,
     scenarios,
     sensor_devices,
     site_profiles,
@@ -32,6 +33,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(organisation_router)
 app.include_router(sensor_devices.router)
+app.include_router(readings.router)
 app.include_router(site_profiles.router)
 app.include_router(sites.router)
 app.include_router(meter_assignments.router)
