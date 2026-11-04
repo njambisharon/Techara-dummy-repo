@@ -4,7 +4,6 @@ from models.sensor_device import SensorDevice
 from repositories.sensor_device_repository import sensor_device_repository
 
 
-
 class SensorDeviceService:
     def register_device(self, db, data, current_user):
         if sensor_device_repository.get_by_serial(db, data.device_serial):
@@ -17,7 +16,7 @@ class SensorDeviceService:
             organisation_id=current_user.organisation_id,
             device_serial=data.device_serial,
             registered_by=current_user.user_id,
-)
+        )
         return sensor_device_repository.create(db, device)
 
     def list_devices(self, db, organisation_id, device_status=None):

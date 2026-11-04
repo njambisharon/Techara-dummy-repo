@@ -3,10 +3,10 @@ import uuid
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
-from core.dependencies import require_roles  
+from core.dependencies import require_roles
 from core.roles import OPERATOR_ONLY
 from database import get_db
-from models.user import User  
+from models.user import User
 from schemas.reading import ReadingCreate, ReadingOut
 from services.reading_service import reading_service
 

@@ -8,22 +8,6 @@ from main import app
 
 
 @pytest.fixture
-def client(db_session):
-    def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def operator(make_user):
-    return make_user()
-
-
-@pytest.fixture
 def device_payload(operator):
     return {
         "organisation_id": str(operator.organisation_id),
@@ -53,12 +37,13 @@ def test_register_duplicate_serial_returns_409(client, device_payload):
     assert response.status_code == 409
 
 
-def test_register_unknown_organisation_returns_400(client, device_payload):
+def test_register_ignores_body_organisation(client, device_payload, operator):
     device_payload["organisation_id"] = str(uuid.uuid4())
 
     response = register(client, device_payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 201
+    assert response.json()["organisation_id"] == str(operator.organisation_id)
 
 
 def test_register_missing_field_returns_422(client, device_payload):
