@@ -1,15 +1,20 @@
 import uuid
-from database import get_db
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.orm import Session
+
+from core.dependencies import require_roles 
+from core.roles import OPERATOR_ONLY
+from database import get_db
 from models.enums import DeviceStatus
+from models.user import User  
 from schemas.sensor_device import (
     SensorDeviceCreate,
     SensorDeviceRead,
     SensorDeviceStatusUpdate,
 )
 from services.sensor_device_service import sensor_device_service
-from sqlalchemy.orm import Session
-from typing import Optional
 
 router = APIRouter(prefix="/devices", tags=["Sensor devices"])
 
@@ -22,8 +27,9 @@ router = APIRouter(prefix="/devices", tags=["Sensor devices"])
 def register_device(
     data: SensorDeviceCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
 ):
-    return sensor_device_service.register_device(db, data)
+    return sensor_device_service.register_device(db, data, current_user)
 
 
 @router.get(
@@ -37,6 +43,7 @@ def list_devices(
         alias="status",
     ),
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
 ):
     return sensor_device_service.list_devices(
         db,
@@ -54,6 +61,7 @@ def update_device_status(
     organisation_id: uuid.UUID,
     data: SensorDeviceStatusUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
 ):
     return sensor_device_service.update_status(
         db,
