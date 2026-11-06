@@ -19,7 +19,13 @@ class SensorDeviceService:
         )
         return sensor_device_repository.create(db, device)
 
-    def list_devices(self, db, organisation_id, device_status=None):
+    def list_devices(self, db, organisation_id, device_status, current_user):
+        if current_user.organisation_id != organisation_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to do this",
+            )
+
         return sensor_device_repository.list_for_organisation(
             db,
             organisation_id,

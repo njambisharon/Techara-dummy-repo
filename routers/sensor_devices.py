@@ -4,9 +4,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
-from core.dependencies import require_roles
-from core.roles import OPERATOR_ONLY
+from core.roles import ALL_ROLES, OPERATOR_ONLY
 from database import get_db
+from dependencies import require_roles
 from models.enums import DeviceStatus
 from models.user import User
 from schemas.sensor_device import (
@@ -43,12 +43,13 @@ def list_devices(
         alias="status",
     ),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return sensor_device_service.list_devices(
         db,
         organisation_id,
         device_status,
+        current_user,
     )
 
 
