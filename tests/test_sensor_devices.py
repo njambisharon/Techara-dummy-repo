@@ -131,13 +131,12 @@ def test_list_devices_filters_by_faulty_status(client, device_payload, operator)
     assert device_id in [d["device_id"] for d in response.json()]
 
 
-def test_list_devices_is_scoped_to_organisation(client, device_payload, operator):
+def test_list_devices_for_other_organisation_returns_403(client, device_payload):
     register(client, device_payload)
 
     response = client.get("/devices", params={"organisation_id": str(uuid.uuid4())})
 
-    assert response.status_code == 200
-    assert response.json() == []
+    assert response.status_code == 403
 
 
 def test_register_stores_device_with_default_status(client, device_payload):
