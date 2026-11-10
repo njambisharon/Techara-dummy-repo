@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from core.dependencies import require_roles
-from core.roles import ALL_ROLES, OPERATOR_ONLY
+from core.roles import ALL_ROLES
 from database import get_db
 from models.user import User
 from schemas.reading import ReadingCreate, ReadingOut
