@@ -1,37 +1,22 @@
-import uuid
-
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from models.reading import Reading
+from sqlalchemy import select
 
 
 class ReadingRepository:
-    def latest_for_assignment(
-        self, db: Session, assignment_id: uuid.UUID
-    ) -> Reading | None:
-        return db.scalars(
+    def latest_for_assignment(self, db, assignment_id):
+        return db.scalar(
             select(Reading)
             .where(Reading.assignment_id == assignment_id)
-            .order_by(Reading.measured_at.desc())
-            .limit(1)
-        ).first()
+            .order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
+        )
 
-    def recent_for_assignment(
-        self, db: Session, assignment_id: uuid.UUID, limit: int = 50
-    ) -> list[Reading]:
+    def recent_for_assignment(self, db, assignment_id, limit: int):
         return db.scalars(
             select(Reading)
             .where(Reading.assignment_id == assignment_id)
-            .order_by(Reading.measured_at.desc())
+            .order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
             .limit(limit)
         ).all()
-
-    def create(self, db: Session, assignment_id: uuid.UUID, data: dict) -> Reading:
-        reading = Reading(assignment_id=assignment_id, **data)
-        db.add(reading)
-        db.commit()
-        db.refresh(reading)
-        return reading
 
     def get_by_measured_at(self, db, assignment_id, measured_at):
         return db.scalar(
@@ -49,7 +34,14 @@ class ReadingRepository:
             )
         )
 
-    def delete(self, db, reading: Reading) -> None:
+    def create(self, db, assignment_id, data):
+        reading = Reading(assignment_id=assignment_id, **data)
+        db.add(reading)
+        db.commit()
+        db.refresh(reading)
+        return reading
+
+    def delete(self, db, reading):
         db.delete(reading)
         db.commit()
 

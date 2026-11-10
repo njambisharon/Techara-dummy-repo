@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from core.dependencies import require_roles
-from core.roles import OPERATOR_ONLY
+from core.roles import ALL_ROLES, OPERATOR_ONLY
 from database import get_db
 from models.user import User
 from schemas.reading import ReadingCreate, ReadingOut
@@ -17,7 +17,7 @@ router = APIRouter(tags=["Readings"])
 def latest_reading(
     assignment_id: uuid.UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return reading_service.get_latest(db, assignment_id)
 
@@ -27,7 +27,7 @@ def recent_readings(
     assignment_id: uuid.UUID,
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return reading_service.list_recent(db, assignment_id, limit)
 
@@ -41,7 +41,7 @@ def create_reading(
     assignment_id: uuid.UUID,
     payload: ReadingCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     return reading_service.create(db, assignment_id, payload)
 
@@ -54,6 +54,6 @@ def delete_reading(
     assignment_id: uuid.UUID,
     reading_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(*OPERATOR_ONLY)),
+    current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
     reading_service.delete(db, assignment_id, reading_id)
