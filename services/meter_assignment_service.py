@@ -71,9 +71,10 @@ class MeterAssignmentService:
             **MeterAssignmentRead.model_validate(assignment).model_dump(),
             device_token=token,
         )
+
     def get(self, db, assignment_id):
         return db.get(MeterAssignment, assignment_id)
-    
+
     def get_assignment(self, db, current_user, assignment_id: uuid.UUID):
         assignment = meter_assignment_repository.get_for_organisation(
             db,

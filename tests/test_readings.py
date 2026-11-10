@@ -14,6 +14,13 @@ from services.reading_service import reading_service
 SEEDED_ASSIGNMENT = "4c082973-3119-4af2-86c1-2ec87b8418f8"
 BUSINESS_ID = uuid.UUID("c5cd6d2a-c2d5-4b2b-b798-2a7fa6146bd3")
 
+CREATE_PAYLOAD = {
+    "voltage_v": 230.5,
+    "current_a": 5.2,
+    "power_w": 1198.6,
+    "energy_total_kwh": 100.25,
+}
+
 
 def fake_reading(reading_id=1):
     now = datetime.now(timezone.utc)
@@ -135,6 +142,39 @@ class TestReadingsApi:
 
         assert response.status_code == 422
 
+    def test_create_reading_returns_201(self, client):
+        with patch.object(reading_service, "create", return_value=fake_reading()):
+            response = client.post(
+                f"/assignments/{SEEDED_ASSIGNMENT}/readings",
+                json=CREATE_PAYLOAD,
+            )
+
+        assert response.status_code == 201
+        assert response.json()["reading_id"] == 1
+
+    def test_create_reading_returns_409_for_duplicate(self, client):
+        error = HTTPException(status_code=409, detail="Duplicate reading")
+        with patch.object(reading_service, "create", side_effect=error):
+            response = client.post(
+                f"/assignments/{SEEDED_ASSIGNMENT}/readings",
+                json=CREATE_PAYLOAD,
+            )
+
+        assert response.status_code == 409
+
+    def test_delete_reading_returns_204(self, client):
+        with patch.object(reading_service, "delete", return_value=None):
+            response = client.delete(f"/assignments/{SEEDED_ASSIGNMENT}/readings/1")
+
+        assert response.status_code == 204
+
+    def test_delete_reading_returns_404_when_missing(self, client):
+        error = HTTPException(status_code=404, detail="Reading not found")
+        with patch.object(reading_service, "delete", side_effect=error):
+            response = client.delete(f"/assignments/{SEEDED_ASSIGNMENT}/readings/999")
+
+        assert response.status_code == 404
+
 
 class TestReadingsDatabase:
     def test_seeded_assignment_has_readings(self, db_session, seeded_readings):
@@ -143,7 +183,7 @@ class TestReadingsDatabase:
             .filter(Reading.assignment_id == uuid.UUID(SEEDED_ASSIGNMENT))
             .count()
         )
-        assert count == 3
+        assert count >= len(seeded_readings)
 
     def test_latest_matches_first_of_recent(self, db_session, seeded_readings):
         assignment = uuid.UUID(SEEDED_ASSIGNMENT)

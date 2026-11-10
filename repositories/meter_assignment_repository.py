@@ -24,8 +24,10 @@ class MeterAssignmentRepository:
                 SensorDevice.organisation_id == organisation_id,
             )
         )
+
     def get(self, db, assignment_id):
         return db.get(MeterAssignment, assignment_id)
+
     def get_open_for_device(self, db, device_id):
         return db.scalar(
             select(MeterAssignment).where(
