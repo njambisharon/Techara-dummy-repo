@@ -16,7 +16,7 @@ def get_jwt_secret():
 
 
 def get_token_minutes():
-    return int(os.getenv("ACCESS_TOKEN_MINUTES", "60"))
+    return int(os.getenv("ACCESS_TOKEN_MINUTES", "300"))
 
 
 def create_access_token(user_id, role, organisation_id, expires_minutes=None):
