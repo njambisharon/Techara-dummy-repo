@@ -16,7 +16,9 @@ class ReadingService:
             raise HTTPException(status_code=404, detail="No readings for this install")
         return reading
 
-    def list_recent(self, db: Session, assignment_id: uuid.UUID, limit: int, since=None):
+    def list_recent(
+        self, db: Session, assignment_id: uuid.UUID, limit: int, since=None
+    ):
         return reading_repository.recent_for_assignment(db, assignment_id, limit, since)
 
     def create(self, db: Session, assignment_id: uuid.UUID, payload: ReadingCreate):

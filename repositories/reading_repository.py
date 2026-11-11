@@ -15,8 +15,9 @@ class ReadingRepository:
         if since is not None:
             query = query.where(Reading.measured_at >= since)
         return db.scalars(
-            query.order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
-            .limit(limit)
+            query.order_by(Reading.measured_at.desc(), Reading.reading_id.desc()).limit(
+                limit
+            )
         ).all()
 
     def get_by_measured_at(self, db, assignment_id, measured_at):

@@ -91,7 +91,7 @@ class TestReadingService:
 
         assert result == []
         mock_repo.recent_for_assignment.assert_called_once_with(
-            db, uuid.UUID(SEEDED_ASSIGNMENT), 10
+            db, uuid.UUID(SEEDED_ASSIGNMENT), 10, None
         )
 
 
