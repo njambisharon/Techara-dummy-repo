@@ -10,11 +10,12 @@ class ReadingRepository:
             .order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
         )
 
-    def recent_for_assignment(self, db, assignment_id, limit: int):
+    def recent_for_assignment(self, db, assignment_id, limit: int, since=None):
+        query = select(Reading).where(Reading.assignment_id == assignment_id)
+        if since is not None:
+            query = query.where(Reading.measured_at >= since)
         return db.scalars(
-            select(Reading)
-            .where(Reading.assignment_id == assignment_id)
-            .order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
+            query.order_by(Reading.measured_at.desc(), Reading.reading_id.desc())
             .limit(limit)
         ).all()
 

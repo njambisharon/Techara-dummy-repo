@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
-
+from datetime import datetime
 from core.dependencies import require_roles
 from core.roles import ALL_ROLES
 from database import get_db
@@ -22,15 +22,17 @@ def latest_reading(
     return reading_service.get_latest(db, assignment_id)
 
 
+from datetime import datetime
+
 @router.get("/assignments/{assignment_id}/readings", response_model=list[ReadingOut])
 def recent_readings(
     assignment_id: uuid.UUID,
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=5000),
+    since: datetime | None = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(*ALL_ROLES)),
 ):
-    return reading_service.list_recent(db, assignment_id, limit)
-
+    return reading_service.list_recent(db, assignment_id, limit, since)
 
 @router.post(
     "/assignments/{assignment_id}/readings",
