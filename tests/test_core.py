@@ -31,4 +31,4 @@ def test_site_timezone_is_lusaka():
 
 
 def test_suggested_settings_has_min_observed_days():
-    assert SUGGESTED_SETTINGS["min_observed_days"] == 3
+    assert SUGGESTED_SETTINGS["min_observed_days"] == 1

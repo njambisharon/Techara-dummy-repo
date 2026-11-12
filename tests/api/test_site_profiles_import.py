@@ -39,7 +39,7 @@ def test_import_averages_into_local_hours(client, operator, auth_headers, own_si
     assert body["solar_profile"]["low_sun_kw"][10] == 5.0
     assert body["low_sun_date"] == "2026-10-02"
     assert body["complete_days"] == 3
-    assert body["suggested_settings"]["min_observed_days"] == 3
+    assert body["suggested_settings"]["min_observed_days"] == 1
 
 
 def test_naive_timestamps_use_source_timezone(client, operator, auth_headers, own_site):
@@ -157,15 +157,15 @@ def test_enough_days_suggest_observed_labels(client, operator, auth_headers, own
     assert labels["solar"] == "observed"
 
 
-def test_few_days_suggest_estimated_labels(client, operator, auth_headers, own_site):
+def test_two_days_suggest_observed_labels(client, operator, auth_headers, own_site):
     response = client.post(
         f"/sites/{own_site.site_id}/profiles/import",
         json={"csv_text": build_csv(days=2)},
         headers=auth_headers(operator),
     )
     labels = response.json()["suggested_data_labels"]
-    assert labels["baseline"] == "estimated"
-    assert labels["solar"] == "estimated"
+    assert labels["baseline"] == "observed"
+    assert labels["solar"] == "observed"
     assert labels["battery"] == "user_entered"
 
 

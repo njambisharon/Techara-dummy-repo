@@ -8,5 +8,5 @@ SUGGESTED_SETTINGS = {
     "unserved_energy_tolerance_kwh": 0.5,
     "night_start_hour": 18,
     "night_end_hour": 6,
-    "min_observed_days": 3,
+    "min_observed_days": 1,
 }
