@@ -2,7 +2,7 @@
 name = "techara-backend"
 version = "0.1.0"
 description = "Techara backend simulation services and API platform"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
