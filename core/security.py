@@ -1,8 +1,8 @@
 import hashlib
 import os
 import secrets
-from datetime import UTC, datetime, timedelta
 
+from datetime import datetime, timedelta, timezone
 import jwt
 
 ALGORITHM = "HS256"
@@ -16,11 +16,11 @@ def get_jwt_secret():
 
 
 def get_token_minutes():
-    return int(os.getenv("ACCESS_TOKEN_MINUTES", "60"))
+    return int(os.getenv("ACCESS_TOKEN_MINUTES", "300"))
 
 
 def create_access_token(user_id, role, organisation_id, expires_minutes=None):
-    expire = datetime.now(UTC) + timedelta(
+    expire = datetime.now(timezone.utc) + timedelta(
         minutes=expires_minutes if expires_minutes is not None else get_token_minutes()
     )
     payload = {

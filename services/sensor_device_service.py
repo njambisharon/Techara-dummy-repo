@@ -5,7 +5,7 @@ from repositories.sensor_device_repository import sensor_device_repository
 
 
 class SensorDeviceService:
-    def register_device(self, db, data):
+    def register_device(self, db, data, current_user):
         if sensor_device_repository.get_by_serial(db, data.device_serial):
             raise HTTPException(
                 status_code=409,
@@ -13,14 +13,19 @@ class SensorDeviceService:
             )
 
         device = SensorDevice(
-            organisation_id=data.organisation_id,
+            organisation_id=current_user.organisation_id,
             device_serial=data.device_serial,
-            registered_by=data.registered_by,
+            registered_by=current_user.user_id,
         )
-
         return sensor_device_repository.create(db, device)
 
-    def list_devices(self, db, organisation_id, device_status=None):
+    def list_devices(self, db, organisation_id, device_status, current_user):
+        if current_user.organisation_id != organisation_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to do this",
+            )
+
         return sensor_device_repository.list_for_organisation(
             db,
             organisation_id,

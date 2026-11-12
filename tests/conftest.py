@@ -9,7 +9,6 @@ os.environ.setdefault(
     '["http://localhost:3000","http://127.0.0.1:3000"]',
 )
 os.environ["DATABASE_URL"] = "sqlite://"
-os.environ.setdefault("DATABASE_URL", "sqlite://")
 
 from fastapi.testclient import TestClient
 
@@ -46,10 +45,7 @@ from models.user import User
 
 @pytest.fixture(scope="session")
 def engine():
-    """
-    Session-scoped SQLite engine for all tests.
-    Works in CI without Docker or external Postgres.
-    """
+    """Session-scoped SQLite engine. Creates the schema once and drops it at the end."""
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -72,7 +68,7 @@ def engine():
 
 @pytest.fixture
 def db_session(engine):
-    """Transaction-scoped session that rolls back after each test."""
+    """Session wrapped in a transaction that rolls back after each test."""
     connection = engine.connect()
     transaction = connection.begin()
     Session = sessionmaker(bind=connection, expire_on_commit=False)
@@ -88,13 +84,14 @@ def db_session(engine):
 
 
 @pytest.fixture
-def client(db_session):
+def client(db_session, operator, auth_headers):
     def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:
+        test_client.headers.update(auth_headers(operator))
         yield test_client
 
     app.dependency_overrides.clear()

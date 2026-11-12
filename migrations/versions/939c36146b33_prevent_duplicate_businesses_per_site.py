@@ -12,31 +12,31 @@ import sqlalchemy as sa
 
 
 revision: str = "939c36146b33"
-down_revision: Union[str, Sequence[str], None] = "76f9e71a6602"
+down_revision: Union[str, Sequence[str], None] = "217e6c5990a5"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    connection = op.get_bind()
-
-    duplicates = connection.execute(
+    op.execute(
         sa.text(
             """
-            SELECT site_id, business_name, COUNT(*) AS total
-            FROM business
-            GROUP BY site_id, business_name
-            HAVING COUNT(*) > 1
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM business
+                    GROUP BY site_id, business_name
+                    HAVING COUNT(*) > 1
+                ) THEN
+                    RAISE EXCEPTION
+                        'Duplicate business names exist within the same site. '
+                        'Resolve duplicates before applying this migration.';
+                END IF;
+            END $$;
             """
         )
-    ).fetchall()
-
-    if duplicates:
-        raise RuntimeError(
-            "Cannot add business uniqueness constraint. "
-            "Duplicate business names exist within the same site: "
-            f"{duplicates}"
-        )
+    )
 
     op.create_unique_constraint(
         "uq_business_site_name",
